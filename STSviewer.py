@@ -11,9 +11,12 @@ class STSviewer(QMainWindow):
         # Set up the user interface from Designer.
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        # Ask for the directory containing the matrix files
         self.path=QFileDialog.getExistingDirectory()
         self.M=pyO.Matrix(self.path)
-        val=200
+        val=200 # value used for the colors
+        # colors used for the plot lines
         self.colors=[(0,0,val),(0,val,0),(val,0,0),(val,val,0),(val,0,val),(0,val,val)]
         
         # SIGNALS -> SLOTS
@@ -35,7 +38,7 @@ class STSviewer(QMainWindow):
         for i in self.STS:
             self.ui.comboBox.addItem(str(i))
 
-    def updateSTSid(self):
+    def updateSTSid(self): # If and ID is chosen, the listWidget will be populated with the correct num and selected
         self.ui.listWidget.clear()
         ID=int(self.ui.comboBox.currentText())
         for i in range(self.STS[ID]):
@@ -48,6 +51,7 @@ class STSviewer(QMainWindow):
         self.plotUpdate()
         
     def plotUpdate(self):
+        # plot the selected curves
         ID=int(self.ui.comboBox.currentText())
         self.ax.clear()
         self.ax.hold(True)

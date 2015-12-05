@@ -29,6 +29,10 @@ class Matrix:
         if N==0: return ""
         s=self.fp.read(N*2).decode('utf-16').encode('utf-8')
         return s
+    def plotSTS(self, ID, num=1):
+        x,y=self.getSTS(ID,num)
+        plt.plot(x,y)
+        plt.show()
     def getSTS(self,ID,num=1):
         I=None
         for x in self.images:
@@ -38,7 +42,6 @@ class Matrix:
         if I==None: return
         v1=self.images[I]['Spectroscopy']['Device_1_Start']['value']
         v2=self.images[I]['Spectroscopy']['Device_1_End']['value']
-        print("Voltage: %f -> %f"%(v1,v2))
         ff=open(self.Path+"/"+I,"rb")
         if ff.read(8)!="ONTMATRX":
             print("ERROR: Invalid STS format")
@@ -158,7 +161,3 @@ class Matrix:
         self.fp.seek(p)
         self.fp.read(bs)
         return r
-
-Path=r"C:/Users/scholi/Desktop/15-Oct-2015"        
-M=Matrix(Path)
-print(M.getSTS(66,4))

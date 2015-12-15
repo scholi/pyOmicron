@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:/Users/scholi/Desktop/pyOmicron/GUI_STSviewer.ui'
+# Form implementation generated from reading ui file 'GUI_STSviewer.ui'
 #
-# Created: Sat Dec 05 08:20:39 2015
-#      by: PyQt4 UI code generator 4.11.3
+# Created: Tue Dec 15 16:52:10 2015
+#      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -35,9 +35,9 @@ class Ui_MainWindow(object):
         self.listWidget = QtGui.QListWidget(self.centralwidget)
         self.listWidget.setGeometry(QtCore.QRect(10, 40, 181, 631))
         self.listWidget.setObjectName(_fromUtf8("listWidget"))
-        self.mplwidget = MatplotlibWidget(self.centralwidget)
-        self.mplwidget.setGeometry(QtCore.QRect(210, 10, 891, 651))
-        self.mplwidget.setObjectName(_fromUtf8("mplwidget"))
+        self.widget = QtGui.QWidget(self.centralwidget)
+        self.widget.setGeometry(QtCore.QRect(210, 10, 891, 651))
+        self.widget.setObjectName(_fromUtf8("widget"))
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1114, 21))
@@ -53,4 +53,3 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "STSviewer", None))
 
-from matplotlibwidget import MatplotlibWidget

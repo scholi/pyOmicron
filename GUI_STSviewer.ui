@@ -34,7 +34,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="MatplotlibWidget" name="mplwidget">
+   <widget class="QWidget" name="widget">
     <property name="geometry">
      <rect>
       <x>210</x>

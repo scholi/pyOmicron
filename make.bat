@@ -1,0 +1,1 @@
+python C:\Python27\Lib\site-packages\PyQt4\uic\pyuic.py GUI_STSviewer.ui > GUI_STSviewer.py

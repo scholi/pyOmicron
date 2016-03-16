@@ -32,10 +32,12 @@ class Matrix:
 		x,y=self.getSTS(ID,num)
 		plt.plot(x,y)
 		plt.show()
-	def getSTS(self,ID,num=1): # Get a spectroscopy file xxxx-ID_num.I(V)_mtrx
+	def getDIDV(self, ID, num=1):
+		return self.getSTS(ID,num,ext='Aux2')
+	def getSTS(self,ID,num=1,ext='I'): # Get a spectroscopy file xxxx-ID_num.I(V)_mtrx
 		I=None # Will store the filename
 		for x in self.images: # Scan through all image saved and find the one with correct ID and num
-			if re.match(r'.*--%i_%i\.I\(V\)_mtrx$'%(ID,num),x):
+			if re.match(r'.*--%i_%i\.%s\(V\)_mtrx$'%(ID,num,ext),x):
 				I=x
 				break
 		if I==None: return

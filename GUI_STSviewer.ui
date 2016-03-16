@@ -30,11 +30,11 @@
       <x>10</x>
       <y>40</y>
       <width>181</width>
-      <height>631</height>
+      <height>601</height>
      </rect>
     </property>
    </widget>
-   <widget class="QWidget" name="widget">
+   <widget class="QWidget" name="widget" native="true">
     <property name="geometry">
      <rect>
       <x>210</x>
@@ -42,6 +42,41 @@
       <width>891</width>
       <height>651</height>
      </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>650</y>
+      <width>111</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Bandbroadening (ΔV):</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="DV">
+    <property name="geometry">
+     <rect>
+      <x>121</x>
+      <y>650</y>
+      <width>71</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="decimals">
+     <number>3</number>
+    </property>
+    <property name="minimum">
+     <double>0.001000000000000</double>
+    </property>
+    <property name="singleStep">
+     <double>0.100000000000000</double>
+    </property>
+    <property name="value">
+     <double>0.100000000000000</double>
     </property>
    </widget>
   </widget>
@@ -57,13 +92,6 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>MatplotlibWidget</class>
-   <extends>QWidget</extends>
-   <header>matplotlibwidget</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

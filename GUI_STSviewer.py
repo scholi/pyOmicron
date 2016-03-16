@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'GUI_STSviewer.ui'
 #
-# Created: Tue Dec 15 16:52:10 2015
-#      by: PyQt4 UI code generator 4.11.2
+# Created: Wed Mar 16 22:40:18 2016
+#      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -33,11 +33,21 @@ class Ui_MainWindow(object):
         self.comboBox.setGeometry(QtCore.QRect(10, 10, 181, 20))
         self.comboBox.setObjectName(_fromUtf8("comboBox"))
         self.listWidget = QtGui.QListWidget(self.centralwidget)
-        self.listWidget.setGeometry(QtCore.QRect(10, 40, 181, 631))
+        self.listWidget.setGeometry(QtCore.QRect(10, 40, 181, 601))
         self.listWidget.setObjectName(_fromUtf8("listWidget"))
         self.widget = QtGui.QWidget(self.centralwidget)
         self.widget.setGeometry(QtCore.QRect(210, 10, 891, 651))
         self.widget.setObjectName(_fromUtf8("widget"))
+        self.label = QtGui.QLabel(self.centralwidget)
+        self.label.setGeometry(QtCore.QRect(10, 650, 111, 20))
+        self.label.setObjectName(_fromUtf8("label"))
+        self.DV = QtGui.QDoubleSpinBox(self.centralwidget)
+        self.DV.setGeometry(QtCore.QRect(121, 650, 71, 22))
+        self.DV.setDecimals(3)
+        self.DV.setMinimum(0.001)
+        self.DV.setSingleStep(0.1)
+        self.DV.setProperty("value", 0.1)
+        self.DV.setObjectName(_fromUtf8("DV"))
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1114, 21))
@@ -52,4 +62,5 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "STSviewer", None))
+        self.label.setText(_translate("MainWindow", "Bandbroadening (ΔV):", None))
 

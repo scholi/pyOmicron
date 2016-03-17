@@ -12,6 +12,10 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 import matplotlib.mlab as mlab
 import numpy as np
+import sys
+import matplotlib.gridspec as gridspec
+
+FontSize=8
 
 class STSviewer(QMainWindow):
 	def on_pick(self):
@@ -27,14 +31,24 @@ class STSviewer(QMainWindow):
 		self.fig = Figure((9.0,6.0), dpi=self.dpi)
 		self.canvas = FigureCanvas(self.fig)
 		self.canvas.setParent(self.ui.widget)
-		self.axes = self.fig.add_subplot(211)
-		self.twin = self.axes.twinx()
-		self.ax2  = self.fig.add_subplot(212)
 		self.canvas.mpl_connect('pick_event', self.on_pick)
 		self.mpl_toolbar = NavigationToolbar(self.canvas, self.ui.widget)
+		
+		gs=gridspec.GridSpec(2, 2)
+		sp1=gs.new_subplotspec((0,0))
+		sp2=gs.new_subplotspec((1,0))
+		sp3=gs.new_subplotspec((0,1),2)
+		self.ax1 = self.fig.add_subplot(sp1)
+		self.ax2  = self.fig.add_subplot(sp2)
+		self.ax3  = self.fig.add_subplot(sp3)
+		self.ax1b = self.ax1.twinx()
+		self.ax3b = self.ax3.twinx()
 
 		# Ask for the directory containing the matrix files
-		self.path=QFileDialog.getExistingDirectory()
+		if len(sys.argv)<2:
+			self.path=QFileDialog.getExistingDirectory()
+		else:
+			self.path=sys.argv[1]
 		self.M=pyO.Matrix(self.path)
 		val=200 # value used for the colors
 		# colors used for the plot lines
@@ -74,26 +88,38 @@ class STSviewer(QMainWindow):
 	def plotUpdate(self):
 		# plot the selected curves
 		ID=int(self.ui.comboBox.currentText())
-		self.axes.clear()
-		self.twin.clear()
+		self.ax1.clear()
+		self.ax1b.clear()
 		self.ax2.clear()
-		self.axes.hold(True)
-		self.axes.set_xlabel("Bias [V]")
-		self.ax2.set_xlabel("Bias [V]")
-		self.axes.set_ylabel("Current [pA]")
-		self.twin.set_ylabel("dI/dV [pA/V]")
-		self.ax2.set_ylabel(r'$\frac{dI/dV}{\overline{I/V}}$')
+		self.ax3.clear()
+		self.ax3b.clear()
+		self.ax1.hold(True)
+		self.ax1.set_xlabel("Bias [V]",fontsize=FontSize)
+		self.ax2.set_xlabel("Bias [V]",fontsize=FontSize)
+		self.ax1.set_ylabel("Current [pA]",fontsize=FontSize)
+		self.ax1b.set_ylabel("dI/dV [pA/V]",fontsize=FontSize)
+		self.ax2.set_ylabel(r'$\frac{dI/dV}{\overline{I/V}}$',fontsize=FontSize)
+		self.ax3.set_xlabel("Bias [V]",fontsize=FontSize)
+		self.ax3.set_ylabel("I/V [$\mu$A/V]",fontsize=FontSize)
+		self.ax3b.yaxis.label.set_color("green")
+		self.ax3b.tick_params(axis='y',colors="green")
 		for i in range(self.STS[ID]):
 			if self.ui.listWidget.isItemSelected(self.ui.listWidget.item(i)):
 				V,I=self.M.getSTS(ID,i+1)
-				self.axes.plot(V,I*1e-6,color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]))
+				self.ax1.plot(V,I*1e-6,color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]))
 				if ID in self.hasDIDV:
 					V,dI=self.M.getDIDV(ID,i+1)
-					self.twin.plot(V,dI*1e-6,'--',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]))
+					self.ax1b.plot(V,dI*1e-6,'--',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]))
 					DV=self.ui.DV.value()
-					BIV=np.convolve(I/V,np.exp(-np.abs(V)/DV)/(2*DV),mode='same')
+					W=np.exp(-np.abs(V)/DV)/(2*DV)
+					BIV=np.convolve(I/V,W,mode='same')
+					self.ax3.plot(V,1e-12*I/V,'b',label="I/V")
+					self.ax3.plot(V,1e-12*BIV,'r',label="$\overline{I/V}$")
+					self.ax3b.plot(V,W,'g',label="conv. func.")
 					self.ax2.plot(V,dI/BIV,'r')
-			
+					self.ax3.legend(prop={'size':6})
+		for x in [self.ax1,self.ax1b,self.ax2,self.ax3,self.ax3b]:
+			x.tick_params(axis='both', labelsize=FontSize)
 		self.canvas.draw()
 
 app = QApplication(sys.argv)

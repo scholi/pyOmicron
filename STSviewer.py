@@ -106,16 +106,27 @@ class STSviewer(QMainWindow):
 		for i in range(self.STS[ID]):
 			if self.ui.listWidget.isItemSelected(self.ui.listWidget.item(i)):
 				V,I=self.M.getSTS(ID,i+1)
+				Vstep=(max(V)-min(V))/len(V)
+				Vhr=(max(V)-min(V))*0.5 # half-range
 				self.ax1.plot(V,I*1e-6,color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]))
 				if ID in self.hasDIDV:
 					V,dI=self.M.getDIDV(ID,i+1)
 					self.ax1b.plot(V,dI*1e-6,'--',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]))
 					DV=self.ui.DV.value()
-					W=np.exp(-np.abs(V)/DV)/(2*DV)
-					BIV=np.convolve(I/V,W,mode='same')
-					self.ax3.plot(V,1e-12*I/V,'b',label="I/V")
+					DVstep=Vstep*np.ceil(DV/Vstep) # Round DV to match a multiple of Vstep (round up)
+					skip=DVstep/Vstep
+					nVb=np.linspace(min(V)-DVstep,min(V),skip,endpoint=False)
+					nVe=np.linspace(max(V)+Vstep,max(V)+DVstep,skip)
+					nV=np.concatenate((nVb,V,nVe))
+					W=np.exp(-np.abs(nV)/DV)/(2*DV)
+					IV=I/V
+					IV[V<1e-9]=0
+					IV=np.concatenate(([IV[0]]*skip,IV,[IV[-1]]*skip))
+					BIV=np.convolve(IV,W,mode='same')
+					BIV=BIV[skip:-skip]
+					self.ax3.plot(nV,1e-12*IV,'b',label="I/V")
 					self.ax3.plot(V,1e-12*BIV,'r',label="$\overline{I/V}$")
-					self.ax3b.plot(V,W,'g',label="conv. func.")
+					self.ax3b.plot(nV,W,'g',label="conv. func.")
 					self.ax2.plot(V,dI/BIV,'r')
 					self.ax3.legend(prop={'size':6})
 		for x in [self.ax1,self.ax1b,self.ax2,self.ax3,self.ax3b]:

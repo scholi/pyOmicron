@@ -114,14 +114,14 @@ class STSviewer(QMainWindow):
 					self.ax1b.plot(V,dI*1e-6,'--',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]))
 					DV=self.ui.DV.value()
 					DVstep=Vstep*np.ceil(DV/Vstep) # Round DV to match a multiple of Vstep (round up)
-					skip=DVstep/Vstep
+					skip=int(DVstep/Vstep)
 					nVb=np.linspace(min(V)-DVstep,min(V),skip,endpoint=False)
 					nVe=np.linspace(max(V)+Vstep,max(V)+DVstep,skip)
 					nV=np.concatenate((nVb,V,nVe))
 					W=np.exp(-np.abs(nV)/DV)/(2*DV)
 					IV=I/V
 					IV[V<1e-9]=0
-					IV=np.concatenate(([IV[0]]*skip,IV,[IV[-1]]*skip))
+					IV=np.pad(IV,(skip,skip),'edge')
 					BIV=np.convolve(IV,W,mode='same')
 					BIV=BIV[skip:-skip]
 					self.ax3.plot(nV,1e-12*IV,'b',label="I/V")

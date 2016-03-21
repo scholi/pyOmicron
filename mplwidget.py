@@ -14,6 +14,8 @@ class MplCanvas(FigureCanvas):
 			QtGui.QSizePolicy.Expanding,
 			QtGui.QSizePolicy.Expanding)
 		FigureCanvas.updateGeometry(self)
+	def resizeEvent(self, event):
+		FigureCanvas.resizeEvent(self, event)
 
 class MplWidget(QtGui.QWidget):
 		def __init__(self, parent = None):

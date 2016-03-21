@@ -204,11 +204,11 @@ class STSviewer(QMainWindow):
 							nVb=np.linspace(min(V)-DVstep,min(V),skip,endpoint=False)
 							nVe=np.linspace(max(V)+Vstep,max(V)+DVstep,skip)
 							nV=np.concatenate((nVb,sV,nVe))
-							W=np.exp(-np.abs(nV)/DV)/(2*DV)
+							W=np.exp(-np.abs(nV)/DV)
 							IV=np.pad(Is[ud],(skip,skip),'edge')
 							IV=IV/nV
 							IV[np.abs(nV)<1e-9]=0
-							BIV=np.convolve(IV,W,mode='same')
+							BIV=np.convolve(IV,W,mode='same')/sum(W)
 							BIV=BIV[skip:-skip]
 							self.ax3.plot(nV,1e-12*IV,['b','--b'][ud],label="I/V (%s)"%(["->","<-"][ud]))
 							self.ax3.plot(sV,1e-12*BIV,['r','--r'][ud],label="$\overline{I/V}$ (%s)"%(["->","<-"][ud]))
@@ -219,11 +219,11 @@ class STSviewer(QMainWindow):
 						nVb=np.linspace(min(V)-DVstep,min(V),skip,endpoint=False)
 						nVe=np.linspace(max(V)+Vstep,max(V)+DVstep,skip)
 						nV=np.concatenate((nVb,sV,nVe))
-						W=np.exp(-np.abs(nV)/DV)/(2*DV)
+						W=np.exp(-np.abs(nV)/DV)
 						IV=I/V
 						IV[np.abs(V)<1e-9]=0
 						IV=np.pad(IV,(skip,skip),'edge')
-						BIV=np.convolve(IV,W,mode='same')
+						BIV=np.convolve(IV,W,mode='same')/sum(W)
 						BIV=BIV[skip:-skip]
 						self.ax3.plot(nV,1e-12*IV,'b',label="I/V")
 						self.ax3.plot(V,1e-12*BIV,'r',label="$\overline{I/V}$")

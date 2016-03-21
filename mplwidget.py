@@ -1,4 +1,4 @@
-from PyQt4 import QtGui
+from PyQt4 import QtGui,QtCore
 import matplotlib as mpl
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
@@ -14,12 +14,15 @@ class MplCanvas(FigureCanvas):
 			QtGui.QSizePolicy.Expanding,
 			QtGui.QSizePolicy.Expanding)
 		FigureCanvas.updateGeometry(self)
-	def resizeEvent(self, event):
-		FigureCanvas.resizeEvent(self, event)
+	def sizeHint(self):
+		w, h = self.get_width_height()
+		return QtCore.QSize(w,h)
 
 class MplWidget(QtGui.QWidget):
 		def __init__(self, parent = None):
 			QtGui.QWidget.__init__(self, parent)
 			self.canvas = MplCanvas()
-			self.canvas.setParent(self)
 			self.mpl_toolbar = NavigationToolbar(self.canvas, self)
+			layout = QtGui.QVBoxLayout()
+			self.setLayout(layout)
+			layout.addWidget(self.canvas)

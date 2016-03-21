@@ -6,11 +6,6 @@ from GUI_STSviewer import Ui_MainWindow
 import sys
 import pyOmicron as pyO
 import re
-import matplotlib as mpl
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.figure import Figure
-import matplotlib.mlab as mlab
 import numpy as np
 import sys
 import matplotlib.gridspec as gridspec
@@ -26,13 +21,9 @@ class STSviewer(QMainWindow):
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi(self)
 
-		self.dpi = 100
-				
-		self.fig = Figure((9.0,6.0), dpi=self.dpi)
-		self.canvas = FigureCanvas(self.fig)
-		self.canvas.setParent(self.ui.widget)
+		self.canvas=self.ui.mpl.canvas
+		self.fig = self.ui.mpl.canvas.fig
 		self.canvas.mpl_connect('pick_event', self.on_pick)
-		self.mpl_toolbar = NavigationToolbar(self.canvas, self.ui.widget)
 		
 		gs=gridspec.GridSpec(2, 2)
 		sp1=gs.new_subplotspec((0,0))
@@ -58,13 +49,23 @@ class STSviewer(QMainWindow):
 		self.ui.comboBox.currentIndexChanged.connect(self.updateSTSid)
 		self.ui.listWidget.itemSelectionChanged.connect(self.plotUpdate)
 		self.ui.DV.valueChanged.connect(self.plotUpdate)
+		self.ui.pushButton.clicked.connect(self.InfoShowHideToggle)
 
 		self.populateUI()
+		
 		if len(sys.argv)>2:
 			ID=sys.argv[2]
 			self.ui.comboBox.setCurrentIndex(self.ui.comboBox.findText(ID))
 		self.plotUpdate()
-	
+		self.InfoShowHideToggle('Hide')
+
+	def InfoShowHideToggle(self,action='Toggle'):
+		if action=='Hide' or self.ui.treeWidget.isVisible():
+			self.ui.treeWidget.hide()
+			self.ui.pushButton.setText("<<")
+		else:
+			self.ui.treeWidget.show()
+			self.ui.pushButton.setText(">>")
 	def populateUI(self):
 		self.ui.listWidget.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
 		self.STS={}

@@ -59,7 +59,10 @@ class STSviewer(QMainWindow):
 		self.ui.listWidget.itemSelectionChanged.connect(self.plotUpdate)
 		self.ui.DV.valueChanged.connect(self.plotUpdate)
 		self.populateUI()
-		
+		if len(sys.argv)>2:
+			ID=sys.argv[2]
+			self.ui.comboBox.setCurrentIndex(self.ui.comboBox.findText(ID))
+	
 	def populateUI(self):
 		self.ui.listWidget.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
 		self.STS={}

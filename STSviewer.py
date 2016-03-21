@@ -90,7 +90,7 @@ class STSviewer(QMainWindow):
 			self.ui.listWidget.addItem( item )
 			item.setSelected(True)
 		self.ui.listWidget.itemSelectionChanged.connect(self.plotUpdate)
-		#self.plotUpdate()
+		self.plotUpdate()
 
 	def updateModel(self, value, item=None):
 		if item==None:

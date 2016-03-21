@@ -66,6 +66,7 @@ class STSviewer(QMainWindow):
 		else:
 			self.ui.treeWidget.show()
 			self.ui.pushButton.setText(">>")
+
 	def populateUI(self):
 		self.ui.listWidget.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
 		self.STS={}
@@ -154,7 +155,6 @@ class STSviewer(QMainWindow):
 					paramsShowed=True
 					temp,p=self.M.getSTSparams(ID,i+1)
 					self.updateModel(p)
-					self.ui.treeWidget.show()
 				V,I=self.M.getSTS(ID,i+1)
 				if len(V)<2:
 					continue

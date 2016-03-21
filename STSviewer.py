@@ -211,7 +211,7 @@ class STSviewer(QMainWindow):
 							self.ax3.plot(nV,1e-12*IV,['b','--b'][ud],label="I/V (%s)"%(["->","<-"][ud]))
 							self.ax3.plot(sV,1e-12*BIV,['r','--r'][ud],label="$\overline{I/V}$ (%s)"%(["->","<-"][ud]))
 							if ud==0: self.ax3b.plot(nV,W,'g',label="conv. func.")
-							self.ax2.plot(sV,dIs[ud]/BIV,['r','--r'][ud],label="(%s)"%(['->','<-'][ud]))
+							self.ax2.plot(sV,dIs[ud]/BIV,['-','--'][ud],color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),label="(%s)"%(['->','<-'][ud]))
 					else: # Only forward scan
 						self.ax1b.plot(V,dI*1e-6,':',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),label="dI%i"%(i))
 						nVb=np.linspace(min(V)-DVstep,min(V),skip,endpoint=False)
@@ -226,7 +226,7 @@ class STSviewer(QMainWindow):
 						self.ax3.plot(nV,1e-12*IV,'b',label="I/V")
 						self.ax3.plot(V,1e-12*BIV,'r',label="$\overline{I/V}$")
 						self.ax3b.plot(nV,W,'g',label="conv. func.")
-						self.ax2.plot(V,dI/BIV,'r')
+						self.ax2.plot(V,dI/BIV,'-',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]))
 					self.ax3.legend(prop={'size':6})
 					self.ax1.legend(loc=2,prop={'size':6})
 					self.ax1b.legend(loc=1,prop={'size':6})

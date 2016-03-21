@@ -34,6 +34,7 @@ class STSviewer(QMainWindow):
 		self.ax3  = self.fig.add_subplot(sp3)
 		self.ax1b = self.ax1.twinx()
 		self.ax3b = self.ax3.twinx()
+		self.fig.tight_layout()
 
 		# Ask for the directory containing the matrix files
 		if len(sys.argv)<2:
@@ -50,7 +51,7 @@ class STSviewer(QMainWindow):
 		self.ui.listWidget.itemSelectionChanged.connect(self.plotUpdate)
 		self.ui.DV.valueChanged.connect(self.plotUpdate)
 		self.ui.pushButton.clicked.connect(self.InfoShowHideToggle)
-
+	
 		self.populateUI()
 		
 		if len(sys.argv)>2:

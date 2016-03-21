@@ -5,8 +5,11 @@ import os, sys
 import re
 
 class Matrix:
-
+	"""
+	Class to Read and Hangle Matrix files
+	"""
 	def __init__(self,Path): # Give the Path of the folder containing all the mtrx files
+		# Read PATH and open file
 		self.Path=Path
 		self.fp=None # file variable
 		for x in os.listdir(Path): # List the folder and look for the _0001.mtrx file
@@ -21,11 +24,14 @@ class Matrix:
 		self.version=self.fp.read(4) # should be 0101
 		self.params={} # dictionary to list all the parameters
 		self.images={} # images[x] are the parameters used during the record for file named x
+
+		# Parse the file and read the block
 		while True: # While not EOF scan files and read block
 			r=self.read_block()
 			if r==False: break
 
-	def read_string(self): # Strings are stored as UTF-16
+	def read_string(self):
+		# Strings are stored as UTF-16. First 32-bits is the string length
 		N = struct.unpack("<L",self.fp.read(4))[0] # string length
 		if N==0: return ""
 		s=self.fp.read(N*2).decode('utf-16').encode('utf-8')
@@ -39,15 +45,21 @@ class Matrix:
 	def getDIDV(self, ID, num=1):
 		return self.getSTS(ID,num,ext='Aux2')
 
-	def getSTS(self,ID,num=1,ext='I'): # Get a spectroscopy file xxxx-ID_num.I(V)_mtrx
+	def getSTSparams(self, ID, num=1, ext='I'):
 		I=None # Will store the filename
 		for x in self.images: # Scan through all image saved and find the one with correct ID and num
 			if re.match(r'.*--%i_%i\.%s\(V\)_mtrx$'%(ID,num,ext),x):
 				I=x
 				break
+		if I==None: return None,None
+		# The returned value is the filename and the parameters associated to it as a dictionary
+		return I,self.images[I]
+
+	def getSTS(self,ID,num=1,ext='I'): # Get a spectroscopy file xxxx-ID_num.I(V)_mtrx
+		I,IM=self.getSTSparams(ID,num,ext)
 		if I==None: return
-		v1=self.images[I]['Spectroscopy']['Device_1_Start']['value'] # Get the start voltage used for the scan
-		v2=self.images[I]['Spectroscopy']['Device_1_End']['value'] # Get the end voltage for the scan
+		v1=IM['Spectroscopy']['Device_1_Start']['value'] # Get the start voltage used for the scan
+		v2=IM['Spectroscopy']['Device_1_End']['value'] # Get the end voltage for the scan
 		ff=open(self.Path+"/"+I,"rb") # read the STS file
 		if ff.read(8)!="ONTMATRX":
 			print("ERROR: Invalid STS format")
@@ -57,7 +69,7 @@ class Matrix:
 			sys.exit(2)
 		t=ff.read(4) # TLKB header
 		ff.read(8) # timestamp
-		ff.read(8) # ???
+		ff.read(8) # Skip 8bytes (??? unknown data. Usualy it's = 00 00 00 00 00 00 00 00)
 		t=ff.read(4) # CSED header
 		ss=struct.unpack('<15L',ff.read(60)) # 15 uint32. ss[6] and ss[7] store the size of the points. ([6] is what was planned and [7] what was actually recorded)
 		# ss[6] should be used to reconstruct the X-axis and ss[7] to read the binary data
@@ -65,8 +77,13 @@ class Matrix:
 			print("ERROR: Data should be here, but aren't. Please debug script")
 			sys.exit(3)
 		ff.read(4)
-		data=np.array(struct.unpack("<%il"%(ss[7]),ff.read(ss[7]*4))) # The data are stored as unsignes LONG
-		X=np.linspace(v1,v2,ss[6]) # reconstruct the X-axis from the start & end value + number of points
+		data=np.array(struct.unpack("<%il"%(ss[7]),ff.read(ss[7]*4))) # The data are stored as unsigned LONG
+
+		# Reconstruct the x-axis. Take the start and end volatege (v1,v2) with the correct number of points and pad it to the data length. Padding is in 'reflect' mode in the case of Forward/backward scans.
+		X=np.linspace(v1,v2,int(IM['Spectroscopy']['Device_1_Points']['value']))
+		if len(X)<ss[6]:
+			X=np.concatenate((X,X[::-1]))[::ss[6]]
+
 		if len(data)<len(X): data=np.concatenate((data,[np.nan]*(len(X)-len(data))))
 		return X,data
 

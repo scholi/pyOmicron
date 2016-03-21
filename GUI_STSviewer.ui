@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1114</width>
-    <height>728</height>
+    <width>1109</width>
+    <height>707</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -79,14 +79,29 @@
      <double>0.100000000000000</double>
     </property>
    </widget>
+   <widget class="QTreeWidget" name="treeWidget">
+    <property name="geometry">
+     <rect>
+      <x>1110</x>
+      <y>10</y>
+      <width>351</width>
+      <height>671</height>
+     </rect>
+    </property>
+    <column>
+     <property name="text">
+      <string notr="true">1</string>
+     </property>
+    </column>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1114</width>
-     <height>21</height>
+     <width>1109</width>
+     <height>19</height>
     </rect>
    </property>
   </widget>

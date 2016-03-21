@@ -58,10 +58,12 @@ class STSviewer(QMainWindow):
 		self.ui.comboBox.currentIndexChanged.connect(self.updateSTSid)
 		self.ui.listWidget.itemSelectionChanged.connect(self.plotUpdate)
 		self.ui.DV.valueChanged.connect(self.plotUpdate)
+
 		self.populateUI()
 		if len(sys.argv)>2:
 			ID=sys.argv[2]
 			self.ui.comboBox.setCurrentIndex(self.ui.comboBox.findText(ID))
+		self.plotUpdate()
 	
 	def populateUI(self):
 		self.ui.listWidget.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
@@ -78,6 +80,7 @@ class STSviewer(QMainWindow):
 			self.ui.comboBox.addItem(str(i))
 
 	def updateSTSid(self): # If and ID is chosen, the listWidget will be populated with the correct num and selected
+		self.ui.listWidget.itemSelectionChanged.disconnect()
 		self.ui.listWidget.clear()
 		ID=int(self.ui.comboBox.currentText())
 		for i in range(self.STS[ID]):
@@ -86,8 +89,45 @@ class STSviewer(QMainWindow):
 			item.setTextColor(QtGui.QColor(*self.colors[i%len(self.colors)]))
 			self.ui.listWidget.addItem( item )
 			item.setSelected(True)
-			
-		self.plotUpdate()
+		self.ui.listWidget.itemSelectionChanged.connect(self.plotUpdate)
+		#self.plotUpdate()
+
+	def updateModel(self, value, item=None):
+		if item==None:
+			self.ui.treeWidget.clear()
+			item=self.ui.treeWidget.invisibleRootItem()
+		if type(value) is dict:
+			if 'value' in value and 'unit' in value:
+				child=QtGui.QTreeWidgetItem()	
+				if value['unit']=='--':
+					child.setText(0,unicode(value['value']))
+				else:
+					child.setText(0,unicode(value['value'])+" "+unicode(value['unit']))
+				item.addChild(child)
+			else:
+				for key, val in sorted(value.iteritems()):
+					child=QtGui.QTreeWidgetItem()
+					child.setText(0,unicode(key))
+					item.addChild(child)
+					self.updateModel(val, child)
+		elif type(value) is list:
+			for val in value:
+				child=QtGui.QTreeWidgetItem()
+				item.addChild(child)
+				if type(val) is dict:
+					child.setText(0, '[dict]')
+					self.updateModel(val,child)
+				elif type(val) is list:
+					child.setText(0, '[list]')
+					self.updateModel(val,child)
+				else:
+					child.setText(0, unicode(val))
+				child.setExpanded(True)
+		else:
+			child=QtGui.QTreeWidgetItem()
+			child.setText(0,unicode(value))
+			item.addChild(child)
+
 	def plotUpdate(self):
 		# plot the selected curves
 		ID=int(self.ui.comboBox.currentText())
@@ -106,32 +146,90 @@ class STSviewer(QMainWindow):
 		self.ax3.set_ylabel("I/V [$\mu$A/V]",fontsize=FontSize)
 		self.ax3b.yaxis.label.set_color("green")
 		self.ax3b.tick_params(axis='y',colors="green")
+		paramsShowed=False
 		for i in range(self.STS[ID]):
 			if self.ui.listWidget.isItemSelected(self.ui.listWidget.item(i)):
+				if not paramsShowed:
+					paramsShowed=True
+					temp,p=self.M.getSTSparams(ID,i+1)
+					self.updateModel(p)
+					self.ui.treeWidget.show()
 				V,I=self.M.getSTS(ID,i+1)
-				Vstep=(max(V)-min(V))/len(V)
-				Vhr=(max(V)-min(V))*0.5 # half-range
-				self.ax1.plot(V,I*1e-6,color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]))
+				if len(V)<2:
+					continue
+				temp,IM=self.M.getSTSparams(ID,i+1) # Retrieve parameters of STS (for numb. of points)
+				NPTS=int(IM['Spectroscopy']['Device_1_Points']['value']) # Number of points in the V range
+				Vstep=(max(V)-min(V))/float(NPTS)
+				sV=np.linspace(min(V),max(V),NPTS) # Voltage values in increading order
+				if len(I)>NPTS: # Forward & Backward scan
+					if V[1]<V[0]: # Start with Downward scan
+						IUp=I[NPTS:]
+						IDown=I[NPTS-1::-1]
+					else:
+						IUp=I[:NPTS]
+						IDown=I[-1:NPTS-1:-1]
+					self.ax1.plot(sV,IUp*1e-6,color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),label="I%i (->)"%(i))
+					self.ax1.plot(sV,IDown*1e-6,'--',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),label="I%i (<-)"%(i))
+				else:
+					self.ax1.plot(V,I*1e-6,color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),label="I%i"%(i))
+					
+				DV=self.ui.DV.value()
+				DVstep=Vstep*np.ceil(DV/Vstep) # Round DV to match a multiple of Vstep (round up)
+				skip=int(DVstep/Vstep)
+				nVb=np.linspace(min(V)-DVstep,min(V),skip,endpoint=False)
+				nVe=np.linspace(max(V)+Vstep,max(V)+DVstep,skip)
+				nV=np.concatenate((nVb,sV,nVe))
 				if ID in self.hasDIDV:
-					V,dI=self.M.getDIDV(ID,i+1)
-					self.ax1b.plot(V,dI*1e-6,'--',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]))
-					DV=self.ui.DV.value()
-					DVstep=Vstep*np.ceil(DV/Vstep) # Round DV to match a multiple of Vstep (round up)
-					skip=int(DVstep/Vstep)
-					nVb=np.linspace(min(V)-DVstep,min(V),skip,endpoint=False)
-					nVe=np.linspace(max(V)+Vstep,max(V)+DVstep,skip)
-					nV=np.concatenate((nVb,V,nVe))
-					W=np.exp(-np.abs(nV)/DV)/(2*DV)
-					IV=I/V
-					IV[V<1e-9]=0
-					IV=np.pad(IV,(skip,skip),'edge')
-					BIV=np.convolve(IV,W,mode='same')
-					BIV=BIV[skip:-skip]
-					self.ax3.plot(nV,1e-12*IV,'b',label="I/V")
-					self.ax3.plot(V,1e-12*BIV,'r',label="$\overline{I/V}$")
-					self.ax3b.plot(nV,W,'g',label="conv. func.")
-					self.ax2.plot(V,dI/BIV,'r')
+					V2,dI=self.M.getDIDV(ID,i+1)
+					if len(I)>NPTS: # Forward & Backward scan
+						if V[1]<V[0]: # Start with Downward scan
+							dIUp=dI[NPTS:]
+							dIDown=dI[NPTS-1::-1]
+						else:
+							dIUp=dI[:NPTS]
+							dIDown=dI[-1:NPTS-1:-1]
+						Is=[IUp,IDown]
+						dIs=[dIUp,dIDown]
+						self.ax1b.plot(sV,dIUp*1e-6,':',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),label="dI%i (->)"%(i))
+						self.ax1b.plot(sV,dIDown*1e-6,'-.',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),label="dI%i (<-)"%(i))
+						for ud in range(2):
+							delta=NPTS-len(Is[ud])
+							if delta>0:
+								if V[1]>V[0]: # problem on the downscan
+									sV=sV[delta:]
+								else:
+									sV=sV[:-delta]
+							nVb=np.linspace(min(V)-DVstep,min(V),skip,endpoint=False)
+							nVe=np.linspace(max(V)+Vstep,max(V)+DVstep,skip)
+							nV=np.concatenate((nVb,sV,nVe))
+							W=np.exp(-np.abs(nV)/DV)/(2*DV)
+							IV=np.pad(Is[ud],(skip,skip),'edge')
+							IV=IV/nV
+							IV[np.abs(sV)<1e-9]=0
+							BIV=np.convolve(IV,W,mode='same')
+							BIV=BIV[skip:-skip]
+							self.ax3.plot(nV,1e-12*IV,['b','--b'][ud],label="I/V (%s)"%(["->","<-"][ud]))
+							self.ax3.plot(sV,1e-12*BIV,['r','--r'][ud],label="$\overline{I/V}$ (%s)"%(["->","<-"][ud]))
+							if ud==0: self.ax3b.plot(nV,W,'g',label="conv. func.")
+							self.ax2.plot(sV,dIs[ud]/BIV,['r','--r'][ud],label="(%s)"%(['->','<-'][ud]))
+					else: # Only forward scan
+						self.ax1b.plot(V,dI*1e-6,':',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),label="dI%i"%(i))
+						nVb=np.linspace(min(V)-DVstep,min(V),skip,endpoint=False)
+						nVe=np.linspace(max(V)+Vstep,max(V)+DVstep,skip)
+						nV=np.concatenate((nVb,sV,nVe))
+						W=np.exp(-np.abs(nV)/DV)/(2*DV)
+						IV=I/V
+						IV[np.abs(V)<1e-9]=0
+						IV=np.pad(IV,(skip,skip),'edge')
+						BIV=np.convolve(IV,W,mode='same')
+						BIV=BIV[skip:-skip]
+						self.ax3.plot(nV,1e-12*IV,'b',label="I/V")
+						self.ax3.plot(V,1e-12*BIV,'r',label="$\overline{I/V}$")
+						self.ax3b.plot(nV,W,'g',label="conv. func.")
+						self.ax2.plot(V,dI/BIV,'r')
 					self.ax3.legend(prop={'size':6})
+					self.ax1.legend(loc=2,prop={'size':6})
+					self.ax1b.legend(loc=1,prop={'size':6})
 		for x in [self.ax1,self.ax1b,self.ax2,self.ax3,self.ax3b]:
 			x.tick_params(axis='both', labelsize=FontSize)
 		self.canvas.draw()

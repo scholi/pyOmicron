@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'GUI_STSviewer.ui'
 #
-# Created: Wed Mar 16 22:40:18 2016
-#      by: PyQt4 UI code generator 4.11.3
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -26,7 +25,7 @@ except AttributeError:
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
-        MainWindow.resize(1114, 728)
+        MainWindow.resize(1109, 707)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.comboBox = QtGui.QComboBox(self.centralwidget)
@@ -48,9 +47,13 @@ class Ui_MainWindow(object):
         self.DV.setSingleStep(0.1)
         self.DV.setProperty("value", 0.1)
         self.DV.setObjectName(_fromUtf8("DV"))
+        self.treeWidget = QtGui.QTreeWidget(self.centralwidget)
+        self.treeWidget.setGeometry(QtCore.QRect(1110, 10, 351, 671))
+        self.treeWidget.setObjectName(_fromUtf8("treeWidget"))
+        self.treeWidget.headerItem().setText(0, _fromUtf8("1"))
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1114, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1109, 19))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(MainWindow)

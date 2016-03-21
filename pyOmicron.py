@@ -82,7 +82,7 @@ class Matrix:
 		# Reconstruct the x-axis. Take the start and end volatege (v1,v2) with the correct number of points and pad it to the data length. Padding is in 'reflect' mode in the case of Forward/backward scans.
 		X=np.linspace(v1,v2,int(IM['Spectroscopy']['Device_1_Points']['value']))
 		if len(X)<ss[6]:
-			X=np.concatenate((X,X[::-1]))[::ss[6]]
+			X=np.concatenate((X,X[::-1]))
 
 		if len(data)<len(X): data=np.concatenate((data,[np.nan]*(len(X)-len(data))))
 		return X,data

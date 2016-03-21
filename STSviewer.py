@@ -205,7 +205,7 @@ class STSviewer(QMainWindow):
 							W=np.exp(-np.abs(nV)/DV)/(2*DV)
 							IV=np.pad(Is[ud],(skip,skip),'edge')
 							IV=IV/nV
-							IV[np.abs(sV)<1e-9]=0
+							IV[np.abs(nV)<1e-9]=0
 							BIV=np.convolve(IV,W,mode='same')
 							BIV=BIV[skip:-skip]
 							self.ax3.plot(nV,1e-12*IV,['b','--b'][ud],label="I/V (%s)"%(["->","<-"][ud]))

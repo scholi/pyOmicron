@@ -5,6 +5,7 @@ import os, sys
 import re
 
 class Matrix:
+
 	def __init__(self,Path): # Give the Path of the folder containing all the mtrx files
 		self.Path=Path
 		self.fp=None # file variable
@@ -23,17 +24,21 @@ class Matrix:
 		while True: # While not EOF scan files and read block
 			r=self.read_block()
 			if r==False: break
+
 	def read_string(self): # Strings are stored as UTF-16
 		N = struct.unpack("<L",self.fp.read(4))[0] # string length
 		if N==0: return ""
 		s=self.fp.read(N*2).decode('utf-16').encode('utf-8')
 		return s
+
 	def plotSTS(self, ID, num=1): # plot STS file called xxx--ID_num.I(V)_mtrx
 		x,y=self.getSTS(ID,num)
 		plt.plot(x,y)
 		plt.show()
+
 	def getDIDV(self, ID, num=1):
 		return self.getSTS(ID,num,ext='Aux2')
+
 	def getSTS(self,ID,num=1,ext='I'): # Get a spectroscopy file xxxx-ID_num.I(V)_mtrx
 		I=None # Will store the filename
 		for x in self.images: # Scan through all image saved and find the one with correct ID and num
@@ -64,6 +69,7 @@ class Matrix:
 		X=np.linspace(v1,v2,ss[6]) # reconstruct the X-axis from the start & end value + number of points
 		if len(data)<len(X): data=np.concatenate((data,[np.nan]*(len(X)-len(data))))
 		return X,data
+
 	def read_value(self): # Values are stored with a specific header for each data type
 		t=self.fp.read(4)
 		if t=="BUOD":
@@ -80,8 +86,10 @@ class Matrix:
 		else:
 			v=t
 		return v
+
 	def getUI(self): # Read an unsigned int from the file
 		return struct.unpack("<L",self.fp.read(4))[0]
+
 	def read_block(self,sub=False):
 		indent=self.fp.read(4) # 4bytes forming the header. Those are capital letters between A-Z
 		if len(indent)<4: # EOF reached?

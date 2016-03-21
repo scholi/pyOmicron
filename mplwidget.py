@@ -22,7 +22,8 @@ class MplWidget(QtGui.QWidget):
 		def __init__(self, parent = None):
 			QtGui.QWidget.__init__(self, parent)
 			self.canvas = MplCanvas()
-			self.mpl_toolbar = NavigationToolbar(self.canvas, self)
+			self.mpl_toolbar = NavigationToolbar(self.canvas,self)
 			layout = QtGui.QVBoxLayout()
 			self.setLayout(layout)
+			layout.addWidget(self.mpl_toolbar)
 			layout.addWidget(self.canvas)

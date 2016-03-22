@@ -9,6 +9,7 @@ import re
 import numpy as np
 import sys
 import matplotlib.gridspec as gridspec
+from STS import STS
 
 FontSize=8
 
@@ -161,8 +162,6 @@ class STSviewer(QMainWindow):
 					temp,p=self.M.getSTSparams(ID,i+1)
 					self.updateModel(p)
 				V,I=self.M.getSTS(ID,i+1)
-				if len(V)<2:
-					continue
 				temp,IM=self.M.getSTSparams(ID,i+1) # Retrieve parameters of STS (for numb. of points)
 				NPTS=int(IM['Spectroscopy']['Device_1_Points']['value']) # Number of points in the V range
 				Vstep=(max(V)-min(V))/float(NPTS)
@@ -174,17 +173,18 @@ class STSviewer(QMainWindow):
 					else:
 						IUp=I[:NPTS]
 						IDown=I[-1:NPTS-1:-1]
-					self.ax1.plot(sV,IUp*1e-6,color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),label="I%i (->)"%(i))
-					self.ax1.plot(sV,IDown*1e-6,'--',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),label="I%i (<-)"%(i))
+					self.ax1.plot(sV,IUp*1e-6,
+						color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
+						label="I%i (->)"%(i))
+					self.ax1.plot(sV,IDown*1e-6,'--',
+						color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
+						label="I%i (<-)"%(i))
 				else:
-					self.ax1.plot(V,I*1e-6,color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),label="I%i"%(i))
+					self.ax1.plot(V,I*1e-6,
+						color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
+						label="I%i"%(i))
 					
 				DV=self.ui.DV.value()
-				DVstep=Vstep*np.ceil(DV/Vstep) # Round DV to match a multiple of Vstep (round up)
-				skip=int(DVstep/Vstep)
-				nVb=np.linspace(min(V)-DVstep,min(V),skip,endpoint=False)
-				nVe=np.linspace(max(V)+Vstep,max(V)+DVstep,skip)
-				nV=np.concatenate((nVb,sV,nVe))
 				if ID in self.hasDIDV:
 					V2,dI=self.M.getDIDV(ID,i+1)
 					if len(I)>NPTS: # Forward & Backward scan
@@ -196,48 +196,43 @@ class STSviewer(QMainWindow):
 							dIDown=dI[-1:NPTS-1:-1]
 						Is=[IUp,IDown]
 						dIs=[dIUp,dIDown]
-						self.ax1b.plot(sV,dIUp*1e-6,':',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),label="dI%i (->)"%(i))
-						self.ax1b.plot(sV,dIDown*1e-6,'-.',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),label="dI%i (<-)"%(i))
-						for ud in range(2):
-							delta=NPTS-len(Is[ud])
-							if delta>0:
-								if V[1]>V[0]: # problem on the downscan
-									sV=sV[delta:]
-								else:
-									sV=sV[:-delta]
-							nVb=np.linspace(min(V)-DVstep,min(V),skip,endpoint=False)
-							nVe=np.linspace(max(V)+Vstep,max(V)+DVstep,skip)
-							nV=np.concatenate((nVb,sV,nVe))
-							W=np.exp(-np.abs(nV)/DV)
-							IV=np.pad(Is[ud]/sV,(skip,skip),'edge')
-							IV[np.abs(nV)<1e-9]=0
-							BIV=np.convolve(IV,W,mode='same')/sum(W)
-							BIV=BIV[skip:-skip]
-							self.ax3.plot(nV,1e-12*IV,['b','--b'][ud],label="I/V (%s)"%(["->","<-"][ud]))
-							self.ax3.plot(sV,1e-12*BIV,['r','--r'][ud],label="$\overline{I/V}$ (%s)"%(["->","<-"][ud]))
-							if ud==0: self.ax3b.plot(nV,W,'g',label="conv. func.")
-							self.ax2.plot(sV,dIs[ud]/BIV,['-','--'][ud],color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),label="(%s)"%(['->','<-'][ud]))
-					else: # Only forward scan
-						self.ax1b.plot(V,dI*1e-6,':',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),label="dI%i"%(i))
-						nVb=np.linspace(min(V)-DVstep,min(V),skip,endpoint=False)
-						nVe=np.linspace(max(V)+Vstep,max(V)+DVstep,skip)
-						nV=np.concatenate((nVb,sV,nVe))
-						W=np.exp(-np.abs(nV)/DV)
-						IV=I/V
-						IV[np.abs(V)<1e-9]=0
-						IV=np.pad(IV,(skip,skip),'edge')
-						BIV=np.convolve(IV,W,mode='same')/sum(W)
-						BIV=BIV[skip:-skip]
-						self.ax3.plot(nV,1e-12*IV,'b',label="I/V")
-						self.ax3.plot(V,1e-12*BIV,'r',label="$\overline{I/V}$")
-						self.ax3b.plot(nV,W,'g',label="conv. func.")
-						self.ax2.plot(V,dI/BIV,'-',color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]))
-					self.ax3.legend(prop={'size':6})
-					self.ax1.legend(loc=2,prop={'size':6})
-					self.ax1b.legend(loc=1,prop={'size':6})
-		for x in [self.ax1,self.ax1b,self.ax2,self.ax3,self.ax3b]:
-			x.tick_params(axis='both', labelsize=FontSize)
+					else:
+						Is=[I]
+						dIs=[dI]
+
+					for ud in range(len(Is)):
+						self.ax1b.plot(sV,dIs[ud]*1e-6,[':','-.'][ud],
+							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
+							label="dI%i (%s)"%(i,['->','<-'][ud]))
+						delta=NPTS-len(Is[ud])
+						if delta>0:
+							if V[1]>V[0]: # problem on the downscan
+								sV=sV[delta:]
+							else:
+								sV=sV[:-delta]
+						S=STS(sV,Is[ud],dIs[ud],DV)
+						IV=S.getIV()
+						BIV=S.getBIV()
+						W=S.getW()
+						nV=S.getnV()
+						self.ax3.plot(nV,1e-12*IV,['b','--b'][ud],
+							label="I/V (%s)"%(["->","<-"][ud]))
+						self.ax3.plot(sV,1e-12*BIV,['r','--r'][ud],
+							label="$\overline{I/V}$ (%s)"%(["->","<-"][ud]))
+						if ud==0: self.ax3b.plot(nV,W,'g',label="conv. func.")
+						self.ax2.plot(sV,dIs[ud]/BIV,['-','--'][ud],
+							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
+							label="(%s)"%(['->','<-'][ud]))
+					# end for ud
+				# end if STS is shown
+			# end for i in IDs
+			self.ax3.legend(prop={'size':6})
+			self.ax1.legend(loc=2,prop={'size':6})
+			self.ax1b.legend(loc=1,prop={'size':6})
+			for x in [self.ax1,self.ax1b,self.ax2,self.ax3,self.ax3b]:
+				x.tick_params(axis='both', labelsize=FontSize)
 		self.canvas.draw()
+		# end plotUpdate
 
 app = QApplication(sys.argv)
 S=STSviewer()

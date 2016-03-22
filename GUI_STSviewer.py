@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'GUI_STSviewer.ui'
 #
-# Created: Mon Mar 21 21:53:52 2016
+# Created: Tue Mar 22 20:22:55 2016
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -34,6 +34,14 @@ class Ui_MainWindow(object):
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.statBT = QtGui.QPushButton(self.centralwidget)
+        self.statBT.setCheckable(True)
+        self.statBT.setChecked(False)
+        self.statBT.setAutoDefault(False)
+        self.statBT.setDefault(False)
+        self.statBT.setFlat(False)
+        self.statBT.setObjectName(_fromUtf8("statBT"))
+        self.verticalLayout.addWidget(self.statBT)
         self.comboBox = QtGui.QComboBox(self.centralwidget)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(1)
@@ -121,6 +129,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "STSviewer", None))
+        self.statBT.setText(_translate("MainWindow", "Statistics", None))
         self.label.setText(_translate("MainWindow", "Bandbroadening (ΔV):", None))
         self.pushButton.setText(_translate("MainWindow", "<<", None))
 

@@ -149,7 +149,7 @@ class STSviewer(QMainWindow):
 
 	def plotUpdate(self):
 		# plot the selected curves
-		ID=int(self.ui.comboBox.currentText())
+		ID=int(self.ui.comboBox.currentText().split(' ')[0])
 		self.ax1.clear()
 		self.ax1b.clear()
 		self.ax2.clear()

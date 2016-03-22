@@ -209,8 +209,7 @@ class STSviewer(QMainWindow):
 							nVe=np.linspace(max(V)+Vstep,max(V)+DVstep,skip)
 							nV=np.concatenate((nVb,sV,nVe))
 							W=np.exp(-np.abs(nV)/DV)
-							IV=np.pad(Is[ud],(skip,skip),'edge')
-							IV=IV/nV
+							IV=np.pad(Is[ud]/sV,(skip,skip),'edge')
 							IV[np.abs(nV)<1e-9]=0
 							BIV=np.convolve(IV,W,mode='same')/sum(W)
 							BIV=BIV[skip:-skip]

@@ -46,19 +46,23 @@ class STSviewer(QMainWindow):
 		# colors used for the plot lines
 		self.colors=[(0,0,val),(0,val,0),(val,0,0),(val,val,0),(val,0,val),(0,val,val)]
 		
-		# SIGNALS -> SLOTS
-		self.ui.comboBox.currentIndexChanged.connect(self.updateSTSid)
-		self.ui.listWidget.itemSelectionChanged.connect(self.plotUpdate)
-		self.ui.DV.valueChanged.connect(self.plotUpdate)
-		self.ui.pushButton.clicked.connect(self.InfoShowHideToggle)
 	
 		self.populateUI()
-		
+
 		if len(sys.argv)>2:
 			ID=sys.argv[2]
 			self.ui.comboBox.setCurrentIndex(self.ui.comboBox.findText(ID))
-		self.plotUpdate()
+
+
+		# SIGNALS -> SLOTS
+		self.ui.comboBox.currentIndexChanged.connect(self.updateSTSid)
+		self.ui.listWidget.itemChanged.connect(self.plotUpdate)
+		self.ui.DV.valueChanged.connect(self.plotUpdate)
+		self.ui.pushButton.clicked.connect(self.InfoShowHideToggle)
 		self.InfoShowHideToggle('Hide')
+		
+		self.updateSTSid()
+		self.plotUpdate()
 
 	def InfoShowHideToggle(self,action='Toggle'):
 		if action=='Hide' or self.ui.treeWidget.isVisible():
@@ -69,7 +73,6 @@ class STSviewer(QMainWindow):
 			self.ui.pushButton.setText(">>")
 
 	def populateUI(self):
-		self.ui.listWidget.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
 		self.STS={}
 		self.hasDIDV=[]
 		for i in self.M.images:
@@ -83,16 +86,17 @@ class STSviewer(QMainWindow):
 			self.ui.comboBox.addItem(str(i))
 
 	def updateSTSid(self): # If and ID is chosen, the listWidget will be populated with the correct num and selected
-		self.ui.listWidget.itemSelectionChanged.disconnect()
+		self.ui.listWidget.itemChanged.disconnect()
 		self.ui.listWidget.clear()
 		ID=int(self.ui.comboBox.currentText())
 		for i in range(self.STS[ID]):
 			item = QtGui.QListWidgetItem()
 			item.setText(str(i+1)+" -----")
 			item.setTextColor(QtGui.QColor(*self.colors[i%len(self.colors)]))
+			item.setFlags(item.flags()|QtCore.Qt.ItemIsUserCheckable)
 			self.ui.listWidget.addItem( item )
-			item.setSelected(True)
-		self.ui.listWidget.itemSelectionChanged.connect(self.plotUpdate)
+			item.setCheckState(QtCore.Qt.Checked)
+		self.ui.listWidget.itemChanged.connect(self.plotUpdate)
 		self.plotUpdate()
 
 	def updateModel(self, value, item=None):
@@ -151,7 +155,7 @@ class STSviewer(QMainWindow):
 		self.ax3b.tick_params(axis='y',colors="green")
 		paramsShowed=False
 		for i in range(self.STS[ID]):
-			if self.ui.listWidget.isItemSelected(self.ui.listWidget.item(i)):
+			if self.ui.listWidget.item(i).checkState()==QtCore.Qt.Checked:
 				if not paramsShowed:
 					paramsShowed=True
 					temp,p=self.M.getSTSparams(ID,i+1)

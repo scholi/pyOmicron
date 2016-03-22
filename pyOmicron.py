@@ -55,7 +55,7 @@ class Matrix:
 		# The returned value is the filename and the parameters associated to it as a dictionary
 		return I,self.images[I]
 
-	def getSTS(self,ID,num=1,ext='I'): # Get a spectroscopy file xxxx-ID_num.I(V)_mtrx
+	def getSTS(self,ID,num=1,ext='I',params=False): # Get a spectroscopy file xxxx-ID_num.I(V)_mtrx
 		I,IM=self.getSTSparams(ID,num,ext)
 		if I==None: return
 		v1=IM['Spectroscopy']['Device_1_Start']['value'] # Get the start voltage used for the scan
@@ -85,6 +85,7 @@ class Matrix:
 			X=np.concatenate((X,X[::-1]))
 
 		if len(data)<len(X): data=np.concatenate((data,[np.nan]*(len(X)-len(data))))
+		if params: return X,data,IM
 		return X,data
 
 	def read_value(self): # Values are stored with a specific header for each data type

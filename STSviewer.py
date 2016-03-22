@@ -10,6 +10,7 @@ import numpy as np
 import sys
 import matplotlib.gridspec as gridspec
 from STS import STS
+import time
 
 FontSize=8
 
@@ -53,7 +54,6 @@ class STSviewer(QMainWindow):
 		if len(sys.argv)>2:
 			ID=sys.argv[2]
 			self.ui.comboBox.setCurrentIndex(self.ui.comboBox.findText(ID))
-
 
 		# SIGNALS -> SLOTS
 		self.ui.comboBox.currentIndexChanged.connect(self.updateSTSid)
@@ -137,6 +137,7 @@ class STSviewer(QMainWindow):
 			item.addChild(child)
 
 	def plotUpdate(self):
+		start=time.clock()
 		# plot the selected curves
 		ID=int(self.ui.comboBox.currentText())
 		self.ax1.clear()
@@ -161,8 +162,7 @@ class STSviewer(QMainWindow):
 					paramsShowed=True
 					temp,p=self.M.getSTSparams(ID,i+1)
 					self.updateModel(p)
-				V,I=self.M.getSTS(ID,i+1)
-				temp,IM=self.M.getSTSparams(ID,i+1) # Retrieve parameters of STS (for numb. of points)
+				V,I,IM=self.M.getSTS(ID,i+1,params=True)
 				NPTS=int(IM['Spectroscopy']['Device_1_Points']['value']) # Number of points in the V range
 				Vstep=(max(V)-min(V))/float(NPTS)
 				sV=np.linspace(min(V),max(V),NPTS) # Voltage values in increading order
@@ -226,12 +226,18 @@ class STSviewer(QMainWindow):
 					# end for ud
 				# end if STS is shown
 			# end for i in IDs
-			self.ax3.legend(prop={'size':6})
-			self.ax1.legend(loc=2,prop={'size':6})
-			self.ax1b.legend(loc=1,prop={'size':6})
+#			self.ax3.legend(prop={'size':6}) quite slow. comment it for now
+#			self.ax1.legend(loc=2,prop={'size':6})
+#			self.ax1b.legend(loc=1,prop={'size':6})
 			for x in [self.ax1,self.ax1b,self.ax2,self.ax3,self.ax3b]:
 				x.tick_params(axis='both', labelsize=FontSize)
 		self.canvas.draw()
+		DT=time.clock()-start
+		msg="Running time: %f"%(DT)
+		item=self.ui.treeWidget.invisibleRootItem()
+		child=QtGui.QTreeWidgetItem()	
+		child.setText(0,unicode(msg))
+		item.addChild(child)
 		# end plotUpdate
 
 app = QApplication(sys.argv)

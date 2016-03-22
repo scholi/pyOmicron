@@ -7,10 +7,9 @@ import sys
 import pyOmicron as pyO
 import re
 import numpy as np
-import sys
+import sys,os
 import matplotlib.gridspec as gridspec
 from STS import STS
-import time
 
 FontSize=8
 
@@ -44,6 +43,15 @@ class STSviewer(QMainWindow):
 		else:
 			self.path=sys.argv[1]
 		self.M=pyO.Matrix(self.path)
+		self.ToC=None
+		f=False
+		if os.path.exists(self.path+"/toc.txt"):
+			f=open(self.path+"/toc.txt","r")
+		elif os.path.exists(self.path+"/ToC.txt"):
+			f=open(self.path+"/ToC.txt","r")
+		if f:
+			self.ToC={int(z[0]):z[1] for z in [x.split() for x in f.readlines()]}
+			f.close()
 		val=200 # value used for the colors
 		# colors used for the plot lines
 		self.colors=[(0,0,val),(0,val,0),(val,0,0),(val,val,0),(val,0,val),(0,val,val)]
@@ -84,12 +92,15 @@ class STSviewer(QMainWindow):
 				else: self.STS[j]=1
 				if i[:-9]+'Aux2(V)_mtrx' in self.M.images: self.hasDIDV.append(j)
 		for i in self.STS:
-			self.ui.comboBox.addItem(str(i))
+			if self.ToC!=None and i in self.ToC:
+				self.ui.comboBox.addItem(str(i)+" (%s)"%(self.ToC[i]))
+			else:
+				self.ui.comboBox.addItem(str(i))
 
 	def updateSTSid(self): # If and ID is chosen, the listWidget will be populated with the correct num and selected
 		self.ui.listWidget.itemChanged.disconnect()
 		self.ui.listWidget.clear()
-		ID=int(self.ui.comboBox.currentText())
+		ID=int(self.ui.comboBox.currentText().split(' ')[0])
 		for i in range(self.STS[ID]):
 			item = QtGui.QListWidgetItem()
 			item.setText(str(i+1)+" -----")
@@ -137,7 +148,6 @@ class STSviewer(QMainWindow):
 			item.addChild(child)
 
 	def plotUpdate(self):
-		start=time.clock()
 		# plot the selected curves
 		ID=int(self.ui.comboBox.currentText())
 		self.ax1.clear()
@@ -232,12 +242,6 @@ class STSviewer(QMainWindow):
 			for x in [self.ax1,self.ax1b,self.ax2,self.ax3,self.ax3b]:
 				x.tick_params(axis='both', labelsize=FontSize)
 		self.canvas.draw()
-		DT=time.clock()-start
-		msg="Running time: %f"%(DT)
-		item=self.ui.treeWidget.invisibleRootItem()
-		child=QtGui.QTreeWidgetItem()	
-		child.setText(0,unicode(msg))
-		item.addChild(child)
 		# end plotUpdate
 
 app = QApplication(sys.argv)

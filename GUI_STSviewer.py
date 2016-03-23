@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'GUI_STSviewer.ui'
 #
-# Created: Tue Mar 22 20:22:55 2016
-#      by: PyQt4 UI code generator 4.11.3
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -42,6 +41,9 @@ class Ui_MainWindow(object):
         self.statBT.setFlat(False)
         self.statBT.setObjectName(_fromUtf8("statBT"))
         self.verticalLayout.addWidget(self.statBT)
+        self.saveBT = QtGui.QPushButton(self.centralwidget)
+        self.saveBT.setObjectName(_fromUtf8("saveBT"))
+        self.verticalLayout.addWidget(self.saveBT)
         self.comboBox = QtGui.QComboBox(self.centralwidget)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(1)
@@ -80,7 +82,7 @@ class Ui_MainWindow(object):
         self.DV.setDecimals(3)
         self.DV.setMinimum(0.001)
         self.DV.setSingleStep(0.1)
-        self.DV.setProperty("value", 0.1)
+        self.DV.setProperty("value", 1.0)
         self.DV.setObjectName(_fromUtf8("DV"))
         self.horizontalLayout.addWidget(self.DV)
         self.verticalLayout.addLayout(self.horizontalLayout)
@@ -117,7 +119,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.pushButton)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1385, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1385, 19))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(MainWindow)
@@ -130,6 +132,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "STSviewer", None))
         self.statBT.setText(_translate("MainWindow", "Statistics", None))
+        self.saveBT.setText(_translate("MainWindow", "Save Data", None))
         self.label.setText(_translate("MainWindow", "Bandbroadening (ΔV):", None))
         self.pushButton.setText(_translate("MainWindow", "<<", None))
 

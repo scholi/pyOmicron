@@ -14,6 +14,11 @@ from STS import STS
 FontSize=8
 
 class STSviewer(QMainWindow):
+	def plot_err1(self, ax,X,Y,DY,col):
+		ax.plot(X,Y,color=col)
+		ax.fill_between(X,Y-DY,Y+DY,facecolor=col,alpha=0.3)
+		ax.fill_between(X,Y-2*DY,Y+2*DY,facecolor=col,alpha=0.2)
+
 	def on_pick(self):
 		pass
 	def __init__(self):
@@ -26,6 +31,8 @@ class STSviewer(QMainWindow):
 		self.fig = self.ui.mpl.canvas.fig
 		self.canvas.mpl_connect('pick_event', self.on_pick)
 		
+		self.save=False 
+
 		gs=gridspec.GridSpec(2, 2)
 		sp1=gs.new_subplotspec((0,0))
 		sp2=gs.new_subplotspec((1,0))
@@ -69,6 +76,7 @@ class STSviewer(QMainWindow):
 		self.ui.DV.valueChanged.connect(self.plotUpdate)
 		self.ui.statBT.clicked.connect(self.plotUpdate)
 		self.ui.pushButton.clicked.connect(self.InfoShowHideToggle)
+		self.ui.saveBT.clicked.connect(self.export)
 		self.InfoShowHideToggle('Hide')
 		
 		self.updateSTSid()
@@ -147,7 +155,11 @@ class STSviewer(QMainWindow):
 			child=QtGui.QTreeWidgetItem()
 			child.setText(0,unicode(value))
 			item.addChild(child)
-
+	def export(self):
+		self.save=True
+		self.plotUpdate()
+		self.save=False		
+	
 	def plotUpdate(self):
 		self.ax1.clear()
 		self.ax1b.clear()
@@ -183,11 +195,11 @@ class STSviewer(QMainWindow):
 					temp,p=self.M.getSTSparams(ID,i+1)
 					self.updateModel(p)
 					N=(0,NPTS)
-					Im=np.empty(N)
-					dIm=np.empty(N)
-					IVm=np.empty((0,NPTS+2*skip))
-					BIVm=np.empty(N)
-					dIdVIVm=np.empty(N)
+					Im=[np.empty(N),np.empty(N)]
+					dIm=[np.empty(N),np.empty(N)]
+					IVm=[np.empty((0,NPTS+2*skip)),np.empty((0,NPTS+2*skip))]
+					BIVm=[np.empty(N),np.empty(N)]
+					dIdVIVm=[np.empty(N),np.empty(N)]
 				sV=np.linspace(min(V),max(V),NPTS) # Voltage values in increading order
 				if len(I)<NPTS: # Missing data
 					I=np.pad(I,NPTS,'constant',constant_values=np.nan)
@@ -200,8 +212,8 @@ class STSviewer(QMainWindow):
 						IDown=I[-1:NPTS-1:-1]
 					if len(IDown)<NPTS: # Missing data
 						IDown=np.pad(IDown,NPTS,'constant',constant_values=np.nan)
-					Im=np.vstack((Im,IUp))
-					Im=np.vstack((Im,IDown))
+					Im[0]=np.vstack((Im[0],IUp))
+					Im[1]=np.vstack((Im[1],IDown))
 					if not stat: self.ax1.plot(sV,IUp*1e-6,
 						color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
 						label="I%i (->)"%(i))
@@ -209,7 +221,10 @@ class STSviewer(QMainWindow):
 						color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
 						label="I%i (<-)"%(i))
 				else:
-					Im=np.vstack((Im,I))
+					if V[0]==min(V):
+						Im[0]=np.vstack((Im[0],I))
+					else:
+						Im[1]=np.vstack((Im[1],I))
 					if not stat: self.ax1.plot(V,I*1e-6,
 						color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
 						label="I%i"%(i))
@@ -223,13 +238,17 @@ class STSviewer(QMainWindow):
 						else:
 							dIUp=dI[:NPTS]
 							dIDown=dI[-1:NPTS-1:-1]
-						dIm=np.vstack((dIm,dIUp))
-						dIm=np.vstack((dIm,dIDown))
+						dIm[0]=np.vstack((dIm[0],dIUp))
+						dIm[1]=np.vstack((dIm[1],dIDown))
 						Is=[IUp,IDown]
 						dIs=[dIUp,dIDown]
 					else:
 						Is=[I]
 						dIs=[dI]
+						if V[0]==min(V):
+							dIm[0]=np.vstack((dIm[0],dI))
+						else:
+							dIm[1]=np.vstack((dIm[1],dI))
 
 					for ud in range(len(Is)):
 						if len(dIs[ud])<NPTS: dIs[ud]=np.pad(dIs[ud],NPTS,'constant',constant_values=np.nan)
@@ -244,15 +263,12 @@ class STSviewer(QMainWindow):
 								sV=sV[:-delta]
 						S=STS(sV,Is[ud],dIs[ud],DV)
 						IV=S.getIV()
-						try:
-							IVm=np.vstack((IVm,IV))
-						except:
-							IVm=IV
 						BIV=S.getBIV()
 						W=S.getW()
 						nV=S.getnV()
-						BIVm=np.vstack((BIVm,BIV))
-						dIdVIVm=np.vstack((dIdVIVm,dIs[ud]/BIV))
+						IVm[ud]=np.vstack((IVm[ud],IV))
+						BIVm[ud]=np.vstack((BIVm[ud],BIV))
+						dIdVIVm[ud]=np.vstack((dIdVIVm[ud],dIs[ud]/BIV))
 						if not stat: self.ax3.plot(nV,1e-12*IV,['b','--b'][ud],
 							label="I/V (%s)"%(["->","<-"][ud]))
 						if not stat: self.ax3.plot(sV,1e-12*BIV,['r','--r'][ud],
@@ -268,31 +284,31 @@ class STSviewer(QMainWindow):
 #			self.ax1.legend(loc=2,prop={'size':6})
 #			self.ax1b.legend(loc=1,prop={'size':6})
 		if stat:
-			Imm=Im.mean(axis=0)
-			Ims=Im.std(axis=0)
-			dImm=dIm.mean(axis=0)
-			dIms=dIm.std(axis=0)
-			dIVm=dIdVIVm.mean(axis=0)
-			dIVs=dIdVIVm.std(axis=0)
-			IVmm=IVm.mean(axis=0)
-			IVms=IVm.std(axis=0)
-			BIVmm=BIVm.mean(axis=0)
-			BIVms=BIVm.std(axis=0)
-			self.ax1.plot(sV,Imm)
-			self.ax1.fill_between(sV,Imm-Ims,Imm+Ims, facecolor='blue', alpha=0.3)
-			self.ax1.fill_between(sV,Imm-2*Ims,Imm+2*Ims, facecolor='blue', alpha=0.2)
-			self.ax1b.plot(sV,dImm,color='green')
-			self.ax1b.fill_between(sV,dImm-dIms,dImm+dIms, facecolor='green', alpha=0.3)
-			self.ax1b.fill_between(sV,dImm-2*dIms,dImm+2*dIms, facecolor='green', alpha=0.2)
-			self.ax2.plot(sV,dIVm)
-			self.ax2.fill_between(sV,dIVm-dIVs,dIVm+dIVs, facecolor='blue', alpha=0.3)
-			self.ax2.fill_between(sV,dIVm-2*dIVs,dIVm+2*dIVs, facecolor='blue', alpha=0.2)
-			self.ax3.plot(nV,IVmm,color="blue")
-			self.ax3.fill_between(nV,IVmm-IVms,IVmm+IVms,facecolor='blue',alpha=0.3)
-			self.ax3.fill_between(nV,IVmm-2*IVms,IVmm+2*IVms,facecolor='blue',alpha=0.2)
-			self.ax3.plot(sV,BIVmm,color="red")
-			self.ax3.fill_between(sV,BIVmm-BIVms,BIVmm+BIVms,facecolor='red',alpha=0.3)
-			self.ax3.fill_between(sV,BIVmm-2*BIVms,BIVmm+2*BIVms,facecolor='red',alpha=0.2)
+			for ud in range(2):
+				if Im[ud].shape[0]==0: continue
+				fmt=['-','--'][ud]
+				col1=['blue','purple'][ud]
+				col2=['red','orange'][ud]
+				col3=['green','green'][ud]
+				Imm=Im[ud].mean(axis=0)
+				Ims=Im[ud].std(axis=0)
+				
+				dImm=dIm[ud].mean(axis=0)
+				dIms=dIm[ud].std(axis=0)
+
+				dIVm=dIdVIVm[ud].mean(axis=0)
+				dIVs=dIdVIVm[ud].std(axis=0)
+				IVmm=IVm[ud].mean(axis=0)
+				IVms=IVm[ud].std(axis=0)
+				BIVmm=BIVm[ud].mean(axis=0)
+				BIVms=BIVm[ud].std(axis=0)
+				self.plot_err1(self.ax1,sV,Imm,Ims,col1)
+				self.plot_err1(self.ax1b,sV,dImm,dIms,col2)
+				self.plot_err1(self.ax2,sV,dIVm,dIVs,col1)
+				self.plot_err1(self.ax3,nV,IVmm,IVms,col1)
+				self.ax3.plot(sV,BIVmm,color=col2)
+				self.ax3.fill_between(sV,BIVmm-BIVms,BIVmm+BIVms,facecolor=col2,alpha=0.3)
+				self.ax3.fill_between(sV,BIVmm-2*BIVms,BIVmm+2*BIVms,facecolor=col2,alpha=0.2)
 		for x in [self.ax1,self.ax1b,self.ax2,self.ax3,self.ax3b]:
 			x.tick_params(axis='both', labelsize=FontSize)
 		self.canvas.draw()

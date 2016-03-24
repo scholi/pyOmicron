@@ -35,12 +35,24 @@ class STS:
 		self.W=np.exp(-np.abs(self.nV)/DV)
 
 		## IV stores I/V, discard values for |V|<ADJUST and pad the vector to match the size of nV
-		self.IV=np.pad(self.I/self.V,(skip,skip),'edge')
-		self.IV[np.abs(self.nV)<ADJUST]=0
+		if len(self.I.shape)>1:
+			self.IV=np.pad(self.I/self.V,((0,0),(skip,skip)),'edge')
+			self.IV[:,np.abs(self.nV)<ADJUST]=0
+		else:
+			self.IV=np.pad(self.I/self.V,(skip,skip),'edge')
+			self.IV[np.abs(self.nV)<ADJUST]=0
 
 		## BIV: broadened I/V : calculated by the convolution
-		BIV=np.convolve(self.IV,self.W,mode='same')/sum(self.W)
-		self.BIV=BIV[skip:-skip]
+		if len(self.IV.shape)==1:
+			BIV=np.convolve(self.IV,self.W,mode='same')/sum(self.W)
+			self.BIV=BIV[skip:-skip]
+		else:
+			BIV=np.empty((0,self.IV.shape[1]))
+			for i in range(self.IV.shape[0]):
+				C=np.convolve(self.IV[i,:],self.W,mode='same')/sum(self.W)
+				BIV=np.vstack((BIV,C))
+			self.BIV=BIV[:,skip:-skip]
+		
 
 	## Various functions to retrieve the usefull values
 	def getIV(self):

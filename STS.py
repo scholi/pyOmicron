@@ -6,7 +6,7 @@ class STS:
 	measurement performed with as STM. The calculation uses an exponential
 	broadening function.
 	"""
-	def __init__(self, V, I , dI, DV=1, ADJUST=1e-9):
+	def __init__(self, V, I , DV=1, ADJUST=1e-9):
 		"""
 		V: the voltage array or list
 		I: the current array or list
@@ -18,11 +18,9 @@ class STS:
 		if V[-1]<V[0]: # Decreasing voltage? Inverse the data
 			self.V=np.array(V[::-1])
 			self.I=np.array(I[::-1])
-			self.dI=np.array(dI[::-1])
 		else: # Increasing Voltage data
 			self.I=np.array(I)
 			self.V=np.array(V)
-			self.dI=np.array(dI)
 
 		Vstep=float(self.V[-1]-self.V[0])/len(self.V) # Voltage step
 		DVstep=Vstep*np.ceil(DV/Vstep) # Round DV to multiple of Vstep

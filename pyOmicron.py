@@ -43,22 +43,26 @@ class Matrix:
 		plt.plot(x,y)
 		plt.show()
 
-	def getSTSData(self, ID):
-		pass	
+	def getSTSData(self, ID,nums=[1]):
+		if not ID in self.IDs: return None
+		for num in nums:
+			I,IM=self.getSTS
+
 	def getDIDV(self, ID, num=1):
 		return self.getSTS(ID,num,ext='Aux2')
 
 	def getSTSparams(self, ID, num=1, ext='I'):
 		if not ID in self.IDs: return None,None
 		I="%s--%i_%i.%s(V)_mtrx"%(self.IDs[ID]['root'],ID,num,ext)
-		if not I in self.images: return None, None
-		return I,self.images[I]
+		if not I in self.images: return None
+		return self.images[I]
 
 	def getSTS(self,ID,num=1,ext='I',params=False): # Get a spectroscopy file xxxx-ID_num.I(V)_mtrx
-		I,IM=self.getSTSparams(ID,num,ext)
-		if I==None: return
+		IM=self.getSTSparams(ID,num,ext)
+		if IM==None: return None
 		v1=IM['Spectroscopy']['Device_1_Start']['value'] # Get the start voltage used for the scan
 		v2=IM['Spectroscopy']['Device_1_End']['value'] # Get the end voltage for the scan
+		I="%s--%i_%i.%s(V)_mtrx"%(self.IDs[ID]['root'],ID,num,ext)
 		ff=open(self.Path+"/"+I,"rb") # read the STS file
 		if ff.read(8)!="ONTMATRX":
 			print("ERROR: Invalid STS format")

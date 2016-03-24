@@ -192,7 +192,7 @@ class STSviewer(QMainWindow):
 				skip=int(np.ceil(DV/Vstep))
 				if not paramsShowed:
 					paramsShowed=True
-					temp,p=self.M.getSTSparams(ID,i+1)
+					p=self.M.getSTSparams(ID,i+1)
 					self.updateModel(p)
 					N=(0,NPTS)
 					Im=[np.empty(N),np.empty(N)]

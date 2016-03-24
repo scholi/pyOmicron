@@ -22,6 +22,7 @@ class Matrix:
 			print("Unknown header! Wrong Matrix file format")
 			sys.exit(2)
 		self.version=self.fp.read(4) # should be 0101
+		self.IDs={}
 		self.params={} # dictionary to list all the parameters
 		self.images={} # images[x] are the parameters used during the record for file named x
 
@@ -42,17 +43,15 @@ class Matrix:
 		plt.plot(x,y)
 		plt.show()
 
+	def getSTSData(self, ID):
+		pass	
 	def getDIDV(self, ID, num=1):
 		return self.getSTS(ID,num,ext='Aux2')
 
 	def getSTSparams(self, ID, num=1, ext='I'):
-		I=None # Will store the filename
-		for x in self.images: # Scan through all image saved and find the one with correct ID and num
-			if re.match(r'.*--%i_%i\.%s\(V\)_mtrx$'%(ID,num,ext),x):
-				I=x
-				break
-		if I==None: return None,None
-		# The returned value is the filename and the parameters associated to it as a dictionary
+		if not ID in self.IDs: return None,None
+		I="%s--%i_%i.%s(V)_mtrx"%(self.IDs[ID]['root'],ID,num,ext)
+		if not I in self.images: return None, None
 		return I,self.images[I]
 
 	def getSTS(self,ID,num=1,ext='I',params=False): # Get a spectroscopy file xxxx-ID_num.I(V)_mtrx
@@ -133,7 +132,17 @@ class Matrix:
 			self.fp.read(12)
 			a=self.read_string() # Filename
 			r['filename']=a
-			self.images[a]=self.params # Store the parameters used to record the file a
+			self.images[a]=self.params # Store the parameters used to record the file a			se
+
+			# Create a catalogue to avoid to scan all images later
+			res=re.search(r'^(.*?)--([0-9]*)_([0-9]*)\.([^_]+)_mtrx$',a)
+			ID=int(res.group(2))
+			num=int(res.group(3))
+			_type=res.group(4)
+			if not ID in self.IDs: self.IDs[ID]={'nums':[],'root':res.group(1)}
+			if _type in ["Aux2(V)"]: self.IDs[ID]['hasDI']=True
+			if _type in ["I(V)"]: self.IDs[ID]['nums'].append(num)
+			
 		elif indent=="SPXE": # Initial configuration
 			self.fp.read(12) # ??? useless 12 bytes
 			r['LNEG']=self.read_block(True)  # read subblock

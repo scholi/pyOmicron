@@ -42,11 +42,50 @@ class Matrix:
 		x,y=self.getSTS(ID,num)
 		plt.plot(x,y)
 		plt.show()
+	
+	def getUpDown(self, X,Y, NPTS):
+		"""
+		Split data in Up and Down measurement, pad them with NaN if necessary and return them in increasing orrder
+		"""
+		if len(Y)<NPTS: # Missing data
+			Y=np.pad(Y,NPTS,'constant',constant_values=np.nan)
+		elif len(Y)>NPTS: # Forward and backward scans
+			if len(Y)<2*NPTS: # Missing data
+				Y=np.pad(Y,2*NPTS,'constant',constant_values=np.nan)
+			if X[NPTS-1]<X[0]: return X[NPTS:],[Y[NPTS:],Y[NPTS-1::-1]]
+			else: return X[:NPTS],[Y[:NPTS],Y[-1:NPTS-1:-1]]
+		if X[-1]<X[0]: return X[::-1],[np.empty(NPTS),Y[::-1],np.empty(NPTS)]
+		return X,[Y,np.empty(NPTS)]
+
+		
 
 	def getSTSData(self, ID,nums=[1]):
-		if not ID in self.IDs: return None
-		for num in nums:
-			I,IM=self.getSTS
+		if not ID in self.IDs or len(nums)<1: return None
+		V,I,IM=self.getSTS(ID,nums[0],params=True)
+		NPTS=int(IM['Spectroscopy']['Device_1_Points']['value'])
+		hasDI=self.IDs[ID]['hasDI']
+		V,I=self.getUpDown(V,I,NPTS)
+		for num in nums[1:]:
+			X,Y=self.getUpDown(*self.getSTS(ID,num),NPTS=NPTS)
+			if not np.array_equal(V,X): raise Exception("Bias axis differs between measurements?!?")
+			for i in range(2): I[i]=np.vstack((I[i],Y[i]))
+		Im=[np.nan]*2
+		Ims=[np.nan]*2
+		for i in range(2):
+			Im[i]=I[i].mean(axis=0)
+			Ims[i]=I[i].std(axis=0)
+		if hasDI:
+			X,dI=self.getUpDown(*self.getDIDV(ID,nums[0]),NPTS=NPTS)
+			for num in nums[1:]:
+				X,Y=self.getUpDown(*self.getDIDV(ID,num),NPTS=NPTS)
+				if not np.array_equal(V,X): raise Exception("Bias axis differs between measurements?!?")
+				for i in range(2): dI[i]=np.vstack((dI[i],Y[i]))
+			dIm=[np.nan]*2
+			dIms=[np.nan]*2
+			for i in range(2):
+				dIm[i]=dI[i].mean(axis=0)
+				dIms[i]=dI[i].std(axis=0)
+			return {'nums':nums,'V':V,'I':I,'dI':dI,'Imean':Im,'Istd':Ims,'dImean':dIm,'dIstd':dIms}
 
 	def getDIDV(self, ID, num=1):
 		return self.getSTS(ID,num,ext='Aux2')

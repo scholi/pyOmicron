@@ -6,7 +6,7 @@ class STS:
 	measurement performed with as STM. The calculation uses an exponential
 	broadening function.
 	"""
-	def __init__(self, V, I , DV=1, ADJUST=1e-9):
+	def __init__(self, V, I , DV=1, ADJUST=1e-9, **kargs):
 		"""
 		V: the voltage array or list
 		I: the current array or list

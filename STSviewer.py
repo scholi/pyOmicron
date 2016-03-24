@@ -261,7 +261,7 @@ class STSviewer(QMainWindow):
 								sV=sV[delta:]
 							else:
 								sV=sV[:-delta]
-						S=STS(sV,Is[ud],dIs[ud],DV)
+						S=STS(sV,Is[ud],DV)
 						IV=S.getIV()
 						BIV=S.getBIV()
 						W=S.getW()

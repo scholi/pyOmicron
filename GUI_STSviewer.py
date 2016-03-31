@@ -2,7 +2,8 @@
 
 # Form implementation generated from reading ui file 'GUI_STSviewer.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created: Thu Mar 31 19:43:53 2016
+#      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -33,14 +34,12 @@ class Ui_MainWindow(object):
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.statBT = QtGui.QPushButton(self.centralwidget)
-        self.statBT.setCheckable(True)
-        self.statBT.setChecked(False)
-        self.statBT.setAutoDefault(False)
-        self.statBT.setDefault(False)
-        self.statBT.setFlat(False)
-        self.statBT.setObjectName(_fromUtf8("statBT"))
-        self.verticalLayout.addWidget(self.statBT)
+        self.statCB = QtGui.QCheckBox(self.centralwidget)
+        self.statCB.setObjectName(_fromUtf8("statCB"))
+        self.verticalLayout.addWidget(self.statCB)
+        self.normCB = QtGui.QCheckBox(self.centralwidget)
+        self.normCB.setObjectName(_fromUtf8("normCB"))
+        self.verticalLayout.addWidget(self.normCB)
         self.saveBT = QtGui.QPushButton(self.centralwidget)
         self.saveBT.setObjectName(_fromUtf8("saveBT"))
         self.verticalLayout.addWidget(self.saveBT)
@@ -119,7 +118,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.pushButton)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1385, 19))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1385, 21))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(MainWindow)
@@ -131,7 +130,8 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "STSviewer", None))
-        self.statBT.setText(_translate("MainWindow", "Statistics", None))
+        self.statCB.setText(_translate("MainWindow", "Statistics", None))
+        self.normCB.setText(_translate("MainWindow", "Shift dI (set min(dI)=0)", None))
         self.saveBT.setText(_translate("MainWindow", "Save Data", None))
         self.label.setText(_translate("MainWindow", "Bandbroadening (ΔV):", None))
         self.pushButton.setText(_translate("MainWindow", "<<", None))

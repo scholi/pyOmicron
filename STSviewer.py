@@ -15,24 +15,38 @@ FontSize=8
 
 class STSviewer(QMainWindow):
 	def plot_err1(self, ax,X,Y,DY,col):
+		"""
+		Function to plot the mean and the statistical error (1*sigma and 2*sigma as a filled area)
+		ax: The axis object
+		X: the vector containing the X-data
+		Y: the vector containing the mean data
+		DY: the vector containing the standard-deviation data
+		X,Y and DY should have the same length
+		"""
 		ax.plot(X,Y,color=col)
 		ax.fill_between(X,Y-DY,Y+DY,facecolor=col,alpha=0.3)
 		ax.fill_between(X,Y-2*DY,Y+2*DY,facecolor=col,alpha=0.2)
 
 	def on_pick(self):
 		pass
+
 	def __init__(self):
+		"""
+		Initialize the graphical user interface
+		"""
 		QMainWindow.__init__(self)
 		# Set up the user interface from Designer.
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi(self)
 
+		# Setup the ploting widgets
 		self.canvas=self.ui.mpl.canvas
 		self.fig = self.ui.mpl.canvas.fig
 		self.canvas.mpl_connect('pick_event', self.on_pick)
 		
 		self.save=False 
 
+		# Setup the plotting layout
 		gs=gridspec.GridSpec(2, 2)
 		sp1=gs.new_subplotspec((0,0))
 		sp2=gs.new_subplotspec((1,0))
@@ -50,6 +64,8 @@ class STSviewer(QMainWindow):
 		else:
 			self.path=sys.argv[1]
 		self.M=pyO.Matrix(self.path)
+
+		# Loocking for a Table of Content file (called toc.txt or ToX.txt)
 		self.ToC=None
 		f=False
 		if os.path.exists(self.path+"/toc.txt"):
@@ -63,18 +79,20 @@ class STSviewer(QMainWindow):
 		# colors used for the plot lines
 		self.colors=[(0,0,val),(0,val,0),(val,0,0),(val,val,0),(val,0,val),(0,val,val)]
 		
-	
+		# Add the found data to the combo box
 		self.populateUI()
 
 		if len(sys.argv)>2:
 			ID=sys.argv[2]
 			self.ui.comboBox.setCurrentIndex(self.ui.comboBox.findText(ID))
 
-		# SIGNALS -> SLOTS
+		# QT: SIGNALS -> SLOTS
+		# This set which function is called when buttons, checkboxes, etc. are clicked
 		self.ui.comboBox.currentIndexChanged.connect(self.updateSTSid)
 		self.ui.listWidget.itemChanged.connect(self.plotUpdate)
 		self.ui.DV.valueChanged.connect(self.plotUpdate)
-		self.ui.statBT.clicked.connect(self.plotUpdate)
+		self.ui.statCB.stateChanged.connect(self.plotUpdate)
+		self.ui.normCB.stateChanged.connect(self.plotUpdate)
 		self.ui.pushButton.clicked.connect(self.InfoShowHideToggle)
 		self.ui.saveBT.clicked.connect(self.export)
 		self.InfoShowHideToggle('Hide')
@@ -83,6 +101,9 @@ class STSviewer(QMainWindow):
 		self.plotUpdate()
 
 	def InfoShowHideToggle(self,action='Toggle'):
+		"""
+		Show a TreeWidget containing the details of a STS scan.
+		"""
 		if action=='Hide' or self.ui.treeWidget.isVisible():
 			self.ui.treeWidget.hide()
 			self.ui.pushButton.setText("<<")
@@ -91,6 +112,9 @@ class STSviewer(QMainWindow):
 			self.ui.pushButton.setText(">>")
 
 	def populateUI(self):
+		"""
+		Look for I(V) measurements and add them to the combobox list
+		"""
 		self.STS={}
 		self.hasDIDV=[]
 		for i in self.M.images:
@@ -106,7 +130,10 @@ class STSviewer(QMainWindow):
 			else:
 				self.ui.comboBox.addItem(str(i))
 
-	def updateSTSid(self): # If and ID is chosen, the listWidget will be populated with the correct num and selected
+	def updateSTSid(self):
+		"""
+		If and ID is chosen, the listWidget will be populated with the correct num and selected
+		"""
 		self.ui.listWidget.itemChanged.disconnect()
 		self.ui.listWidget.clear()
 		ID=int(self.ui.comboBox.currentText().split(' ')[0])
@@ -121,6 +148,9 @@ class STSviewer(QMainWindow):
 		self.plotUpdate()
 
 	def updateModel(self, value, item=None):
+		"""
+		Gather information about the STS measurement and populate the treeWidget (the one hidden on the right of the screen)
+		"""
 		if item==None:
 			self.ui.treeWidget.clear()
 			item=self.ui.treeWidget.invisibleRootItem()
@@ -156,16 +186,25 @@ class STSviewer(QMainWindow):
 			child.setText(0,unicode(value))
 			item.addChild(child)
 	def export(self):
+		"""
+		Toggle the flag to save the data
+		"""
 		self.save=True
 		self.plotUpdate()
 		self.save=False		
 	
 	def plotUpdate(self):
+		"""
+		Most important function which is retrieving and plotting the data
+		"""
+		# Clear the plot
 		self.ax1.clear()
 		self.ax1b.clear()
 		self.ax2.clear()
 		self.ax3.clear()
 		self.ax3b.clear()
+
+		# Setting labels and axis
 		self.ax1.hold(True)
 		self.ax1.set_xlabel("Bias [V]",fontsize=FontSize)
 		self.ax2.set_xlabel("Bias [V]",fontsize=FontSize)
@@ -181,10 +220,12 @@ class STSviewer(QMainWindow):
 		ID=int(self.ui.comboBox.currentText().split(' ')[0])
 		paramsShowed=False
 		stat=False
-		if self.ui.statBT.isChecked(): stat=True
+		norm=False
+		if self.ui.statCB.isChecked(): stat=True
+		if self.ui.normCB.isChecked(): norm=True
 		counter=0
-		for i in range(self.STS[ID]):
-			if self.ui.listWidget.item(i).checkState()==QtCore.Qt.Checked:
+		for i in range(self.STS[ID]): # Scan over all STS having the same ID
+			if self.ui.listWidget.item(i).checkState()==QtCore.Qt.Checked: # Is the curve selected by the user to be plotted?
 				V,I,IM=self.M.getSTS(ID,i+1,params=True)
 				NPTS=int(IM['Spectroscopy']['Device_1_Points']['value']) # Number of points in the V range
 				DV=self.ui.DV.value()
@@ -231,6 +272,7 @@ class STSviewer(QMainWindow):
 					
 				if ID in self.hasDIDV:
 					V2,dI=self.M.getDIDV(ID,i+1)
+					if norm: dI-=dI.min()
 					if len(I)>NPTS: # Forward & Backward scan
 						if V[1]<V[0]: # Start with Downward scan
 							dIUp=dI[NPTS:]
@@ -283,7 +325,7 @@ class STSviewer(QMainWindow):
 #			self.ax3.legend(prop={'size':6}) quite slow. comment it for now
 #			self.ax1.legend(loc=2,prop={'size':6})
 #			self.ax1b.legend(loc=1,prop={'size':6})
-		if stat:
+		if stat: # If statistic checkbox is enabled
 			for ud in range(2):
 				if Im[ud].shape[0]==0: continue
 				fmt=['-','--'][ud]

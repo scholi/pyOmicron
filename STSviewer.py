@@ -224,8 +224,10 @@ class STSviewer(QMainWindow):
 		if self.ui.statCB.isChecked(): stat=True
 		if self.ui.normCB.isChecked(): norm=True
 		counter=0
+		NumShown=[]
 		for i in range(self.STS[ID]): # Scan over all STS having the same ID
 			if self.ui.listWidget.item(i).checkState()==QtCore.Qt.Checked: # Is the curve selected by the user to be plotted?
+				NumShown.append(i+1)
 				V,I,IM=self.M.getSTS(ID,i+1,params=True)
 				NPTS=int(IM['Spectroscopy']['Device_1_Points']['value']) # Number of points in the V range
 				DV=self.ui.DV.value()
@@ -255,12 +257,14 @@ class STSviewer(QMainWindow):
 						IDown=np.pad(IDown,NPTS,'constant',constant_values=np.nan)
 					Im[0]=np.vstack((Im[0],IUp))
 					Im[1]=np.vstack((Im[1],IDown))
-					if not stat: self.ax1.plot(sV,IUp*1e-6,
-						color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
-						label="I%i (->)"%(i))
-					if not stat: self.ax1.plot(sV,IDown*1e-6,'--',
-						color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
-						label="I%i (<-)"%(i))
+					if not stat:
+						self.ax1.plot(sV,IUp*1e-6,
+							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
+							label="I%i (->)"%(i))
+					if not stat:
+						self.ax1.plot(sV,IDown*1e-6,'--',
+							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
+							label="I%i (<-)"%(i))
 				else:
 					if V[0]==min(V):
 						Im[0]=np.vstack((Im[0],I))
@@ -324,7 +328,17 @@ class STSviewer(QMainWindow):
 			# end for i in IDs
 #			self.ax3.legend(prop={'size':6}) quite slow. comment it for now
 #			self.ax1.legend(loc=2,prop={'size':6})
-#			self.ax1b.legend(loc=1,prop={'size':6})
+#		o	self.ax1b.legend(loc=1,prop={'size':6})
+		if self.save:
+			X=np.vstack((V,Im[0],dIm[0],Im[1],dIm[1],dIdVIVm[0],dIdVIVm[1]))
+			header="V\t"
+			header+="\t".join(["I{}_Up(V)".format(i) for i in NumShown])
+			header+="\t"+"\t".join(["dI{}/dV_Up".format(i) for i in NumShown])
+			header+="\t"+"\t".join(["I{}_Down(V)".format(i) for i in NumShown])
+			header+="\t"+"\t".join(["dI{}/dV_Down".format(i) for i in NumShown])
+			header+="\t"+"\t".join(["(dI{}_Up/dV)/(I/V)".format(i) for i in NumShown])
+			header+="\t"+"\t".join(["(dI{}_Down/dV)/(I/V)".format(i) for i in NumShown])
+			np.savetxt("STS_%i.dat"%(ID),X.transpose(),header=header)
 		if stat: # If statistic checkbox is enabled
 			for ud in range(2):
 				if Im[ud].shape[0]==0: continue

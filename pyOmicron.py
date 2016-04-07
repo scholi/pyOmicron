@@ -18,7 +18,7 @@ class Matrix:
 		if self.fp==None:
 			print("Matrix file not found!")
 			sys.exit(1)
-		if self.fp.read(8)!="ONTMATRX": # header of the file
+		if self.fp.read(8)!=b"ONTMATRX": # header of the file
 			print("Unknown header! Wrong Matrix file format")
 			sys.exit(2)
 		self.version=self.fp.read(4) # should be 0101
@@ -35,7 +35,7 @@ class Matrix:
 		# Strings are stored as UTF-16. First 32-bits is the string length
 		N = struct.unpack("<L",self.fp.read(4))[0] # string length
 		if N==0: return ""
-		s=self.fp.read(N*2).decode('utf-16').encode('utf-8')
+		s=self.fp.read(N*2).decode('utf-16')
 		return s
 
 	def plotSTS(self, ID, num=1): # plot STS file called xxx--ID_num.I(V)_mtrx
@@ -92,7 +92,7 @@ class Matrix:
 
 	def getSTSparams(self, ID, num=1, ext='I'):
 		if not ID in self.IDs: return None,None
-		I="%s--%i_%i.%s(V)_mtrx"%(self.IDs[ID]['root'],ID,num,ext)
+		I=u"%s--%i_%i.%s(V)_mtrx"%(self.IDs[ID]['root'],ID,num,ext)
 		if not I in self.images: return None
 		return self.images[I]
 
@@ -101,12 +101,12 @@ class Matrix:
 		if IM==None: return None
 		v1=IM['Spectroscopy']['Device_1_Start']['value'] # Get the start voltage used for the scan
 		v2=IM['Spectroscopy']['Device_1_End']['value'] # Get the end voltage for the scan
-		I="%s--%i_%i.%s(V)_mtrx"%(self.IDs[ID]['root'],ID,num,ext)
+		I=u"%s--%i_%i.%s(V)_mtrx"%(self.IDs[ID]['root'],ID,num,ext)
 		ff=open(self.Path+"/"+I,"rb") # read the STS file
-		if ff.read(8)!="ONTMATRX":
+		if ff.read(8)!=b"ONTMATRX":
 			print("ERROR: Invalid STS format")
 			sys.exit(1)
-		if ff.read(4)!="0101":
+		if ff.read(4)!=b"0101":
 			print("ERROR: Invalid STS version")
 			sys.exit(2)
 		t=ff.read(4) # TLKB header
@@ -115,7 +115,7 @@ class Matrix:
 		t=ff.read(4) # CSED header
 		ss=struct.unpack('<15L',ff.read(60)) # 15 uint32. ss[6] and ss[7] store the size of the points. ([6] is what was planned and [7] what was actually recorded)
 		# ss[6] should be used to reconstruct the X-axis and ss[7] to read the binary data
-		if ff.read(4)!='ATAD':
+		if ff.read(4)!=b'ATAD':
 			print("ERROR: Data should be here, but aren't. Please debug script")
 			sys.exit(3)
 		ff.read(4)
@@ -132,16 +132,16 @@ class Matrix:
 
 	def read_value(self): # Values are stored with a specific header for each data type
 		t=self.fp.read(4)
-		if t=="BUOD":
+		if t==b"BUOD":
 			# double
 			v=struct.unpack("<d",self.fp.read(8))[0]
-		elif t=="GNOL":
+		elif t==b"GNOL":
 			# uint32
 			v=struct.unpack("<L",self.fp.read(4))[0]
-		elif t=="LOOB":
+		elif t==b"LOOB":
 			# bool32
 			v=struct.unpack("<L",self.fp.read(4))[0]>0
-		elif t=="GRTS":
+		elif t==b"GRTS":
 			v=self.read_string()
 		else:
 			v=t
@@ -157,7 +157,7 @@ class Matrix:
 		bs=struct.unpack("<L",self.fp.read(4))[0]+[8,0][sub] # Size of the block
 		r={"ID":indent,"bs":bs} # Store the parameters found in the block
 		p=self.fp.tell() # store the file position of the block
-		if indent=="DOMP": # Block storing parameters changed during an experiment
+		if indent==b"DOMP": # Block storing parameters changed during an experiment
 			self.fp.read(12)
 			inst=self.read_string()
 			prop=self.read_string()
@@ -166,12 +166,12 @@ class Matrix:
 			value=self.read_value()
 			r.update({'inst':inst,'prop':prop,'unit':unit,'value':value})
 			self.params[inst][prop].update({'unit':unit,'value':value}) # Update theparameters information stored in self.params
-		elif indent=="CORP": # Processor of scanning window. Useless in this script for the moment
+		elif indent==b"CORP": # Processor of scanning window. Useless in this script for the moment
 			self.fp.read(12)
 			a=self.read_string()
 			b=self.read_string()
 			r.update({'a':a,'b':b})
-		elif indent=="FERB": # A file was stored
+		elif indent==b"FERB": # A file was stored
 			self.fp.read(12)
 			a=self.read_string() # Filename
 			r['filename']=a
@@ -186,14 +186,14 @@ class Matrix:
 			if _type in ["Aux2(V)"]: self.IDs[ID]['hasDI']=True
 			if _type in ["I(V)"]: self.IDs[ID]['nums'].append(num)
 			
-		elif indent=="SPXE": # Initial configuration
+		elif indent==b"SPXE": # Initial configuration
 			self.fp.read(12) # ??? useless 12 bytes
 			r['LNEG']=self.read_block(True)  # read subblock
 			r['TSNI']=self.read_block(True)  # read subblock
 			r['SXNC']=self.read_block(True)  # read subblock
-		elif indent=="LNEG":
+		elif indent==b"LNEG":
 			r.update({'a':self.read_string(),'b':self.read_string(),'c':self.read_string()})
-		elif indent=="TSNI":
+		elif indent==b"TSNI":
 			anz=self.getUI()
 			rr=[]
 			for ai in range(anz):
@@ -207,7 +207,7 @@ class Matrix:
 					y=self.read_string()
 					pa.append({'a':x,'b':y})
 				rr.append({'a':a,'b':b,'c':c,'content':pa})
-		elif indent=="SXNC":
+		elif indent==b"SXNC":
 			count=self.getUI()
 			r['count']=count
 			rr=[]
@@ -222,7 +222,7 @@ class Matrix:
 					kk.append((x,y))
 				rr.append((a,b,i,kk))
 			r['content']=rr
-		elif indent=="APEE": # Store the configurations
+		elif indent==b"APEE": # Store the configurations
 			self.fp.read(12) # ??? useless 12bytes
 			num=self.getUI() # Number of parameters class
 			r['num']=num

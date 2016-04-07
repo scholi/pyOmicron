@@ -134,6 +134,7 @@ class STSviewer(QMainWindow):
 		"""
 		If and ID is chosen, the listWidget will be populated with the correct num and selected
 		"""
+		if self.ui.comboBox.currentIndex()==-1: raise ValueError("No Data found!")
 		self.ui.listWidget.itemChanged.disconnect()
 		self.ui.listWidget.clear()
 		ID=int(self.ui.comboBox.currentText().split(' ')[0])
@@ -158,14 +159,14 @@ class STSviewer(QMainWindow):
 			if 'value' in value and 'unit' in value:
 				child=QtGui.QTreeWidgetItem()	
 				if value['unit']=='--':
-					child.setText(0,unicode(value['value']))
+					child.setText(0,str(value['value']))
 				else:
-					child.setText(0,unicode(value['value'])+" "+unicode(value['unit']))
+					child.setText(0,str(value['value'])+" "+str(value['unit']))
 				item.addChild(child)
 			else:
-				for key, val in sorted(value.iteritems()):
+				for key, val in sorted(value.items()):
 					child=QtGui.QTreeWidgetItem()
-					child.setText(0,unicode(key))
+					child.setText(0,key)
 					item.addChild(child)
 					self.updateModel(val, child)
 		elif type(value) is list:
@@ -179,11 +180,11 @@ class STSviewer(QMainWindow):
 					child.setText(0, '[list]')
 					self.updateModel(val,child)
 				else:
-					child.setText(0, unicode(val))
+					child.setText(0, str(val))
 				child.setExpanded(True)
 		else:
 			child=QtGui.QTreeWidgetItem()
-			child.setText(0,unicode(value))
+			child.setText(0,str(value))
 			item.addChild(child)
 	def export(self):
 		"""

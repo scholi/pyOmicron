@@ -102,7 +102,9 @@ class Matrix:
 		v1=IM['Spectroscopy']['Device_1_Start']['value'] # Get the start voltage used for the scan
 		v2=IM['Spectroscopy']['Device_1_End']['value'] # Get the end voltage for the scan
 		I=u"%s--%i_%i.%s(V)_mtrx"%(self.IDs[ID]['root'],ID,num,ext)
-		ff=open(self.Path+"/"+I,"rb") # read the STS file
+		ImagePath=self.Path+"/"+I
+		if not os.path.exists(ImagePath): return None
+		ff=open(ImagePath,"rb") # read the STS file
 		if ff.read(8)!=b"ONTMATRX":
 			print("ERROR: Invalid STS format")
 			sys.exit(1)

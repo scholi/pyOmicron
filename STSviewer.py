@@ -119,7 +119,7 @@ class STSviewer(QMainWindow):
 		self.hasDIDV=[]
 		for i in self.M.images:
 			r=re.search(r"--([0-9]+)_([0-9]+).I\(V\)_mtrx",i)
-			if r:
+			if r and os.path.exists(self.path+"/"+i):
 				j=int(r.group(1))
 				if j in self.STS: self.STS[j]+=1
 				else: self.STS[j]=1

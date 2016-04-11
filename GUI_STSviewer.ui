@@ -58,7 +58,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QListWidget" name="listWidget">
+       <widget class="QTableWidget" name="tableWidget">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -190,7 +190,7 @@
      <x>0</x>
      <y>0</y>
      <width>1385</width>
-     <height>21</height>
+     <height>19</height>
     </rect>
    </property>
   </widget>

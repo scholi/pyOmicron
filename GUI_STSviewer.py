@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'GUI_STSviewer.ui'
 #
-# Created: Thu Mar 31 19:43:53 2016
-#      by: PyQt4 UI code generator 4.11.3
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -52,16 +51,18 @@ class Ui_MainWindow(object):
         self.comboBox.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.comboBox.setObjectName(_fromUtf8("comboBox"))
         self.verticalLayout.addWidget(self.comboBox)
-        self.listWidget = QtGui.QListWidget(self.centralwidget)
+        self.tableWidget = QtGui.QTableWidget(self.centralwidget)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(1)
-        sizePolicy.setHeightForWidth(self.listWidget.sizePolicy().hasHeightForWidth())
-        self.listWidget.setSizePolicy(sizePolicy)
-        self.listWidget.setMinimumSize(QtCore.QSize(0, 0))
-        self.listWidget.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        self.listWidget.setObjectName(_fromUtf8("listWidget"))
-        self.verticalLayout.addWidget(self.listWidget)
+        sizePolicy.setHeightForWidth(self.tableWidget.sizePolicy().hasHeightForWidth())
+        self.tableWidget.setSizePolicy(sizePolicy)
+        self.tableWidget.setMinimumSize(QtCore.QSize(0, 0))
+        self.tableWidget.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.tableWidget.setObjectName(_fromUtf8("tableWidget"))
+        self.tableWidget.setColumnCount(0)
+        self.tableWidget.setRowCount(0)
+        self.verticalLayout.addWidget(self.tableWidget)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.label = QtGui.QLabel(self.centralwidget)
@@ -118,7 +119,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.pushButton)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1385, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1385, 19))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(MainWindow)

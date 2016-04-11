@@ -102,7 +102,7 @@ class STSviewer(QMainWindow):
 		# QT: SIGNALS -> SLOTS
 		# This set which function is called when buttons, checkboxes, etc. are clicked
 		self.ui.comboBox.currentIndexChanged.connect(self.updateSTSid)
-		self.ui.listWidget.itemChanged.connect(self.plotUpdate)
+		self.ui.tableWidget.itemChanged.connect(self.plotUpdate)
 		self.ui.DV.valueChanged.connect(self.plotUpdate)
 		self.ui.statCB.stateChanged.connect(self.plotUpdate)
 		self.ui.normCB.stateChanged.connect(self.plotUpdate)
@@ -150,20 +150,30 @@ class STSviewer(QMainWindow):
 
 	def updateSTSid(self):
 		"""
-		If and ID is chosen, the listWidget will be populated with the correct num and selected
+		If and ID is chosen, the tableWidget will be populated with the correct num and selected
 		"""
 		if self.ui.comboBox.currentIndex()==-1: raise ValueError("No Data found!")
-		self.ui.listWidget.itemChanged.disconnect()
-		self.ui.listWidget.clear()
+		self.ui.tableWidget.itemChanged.disconnect()
+		self.ui.tableWidget.clear()
 		ID=int(self.ui.comboBox.currentText().split(' ')[0])
+		self.ui.tableWidget.setRowCount(self.STS[ID])
+		self.ui.tableWidget.setColumnCount(3)
 		for i in range(self.STS[ID]):
-			item = QtGui.QListWidgetItem()
+			item = QtGui.QTableWidgetItem()
+			item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+			item.setCheckState(QtCore.Qt.Checked)
+			self.ui.tableWidget.setItem(i,0,item)
+
+			item = QtGui.QTableWidgetItem()
+			item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+			item.setCheckState(QtCore.Qt.Checked)
+			self.ui.tableWidget.setItem(i,1,item)
+
+			item = QtGui.QTableWidgetItem()
 			item.setText(str(i+1)+" -----")
 			item.setTextColor(QtGui.QColor(*self.colors[i%len(self.colors)]))
-			item.setFlags(item.flags()|QtCore.Qt.ItemIsUserCheckable)
-			self.ui.listWidget.addItem( item )
-			item.setCheckState(QtCore.Qt.Checked)
-		self.ui.listWidget.itemChanged.connect(self.plotUpdate)
+			self.ui.tableWidget.setItem(i,2,item)
+		self.ui.tableWidget.itemChanged.connect(self.plotUpdate)
 		self.plotUpdate()
 
 	def updateModel(self, value, item=None):
@@ -248,8 +258,10 @@ class STSviewer(QMainWindow):
 		NumShown=[]
 
 		for i in range(self.STS[ID]): # Scan over all STS having the same ID
-			if self.ui.listWidget.item(i).checkState()==QtCore.Qt.Checked: # Is the curve selected by the user to be plotted?
-				NumShown.append(i+1) # Store in a list which num will be displayed
+			ShowUp=self.ui.tableWidget.item(i,0)==QtCore.Qt.Checked
+			ShowDown=self.ui.tableWidget.item(i,1)==QtCore.Qt.Checked
+			if ShowUp or ShowDown: # Is the curve selected by the user to be plotted?
+				if not i+1 in NumShown:	NumShown.append(i+1) # Store in a list which num will be displayed
 
 				# Retrieve the STS data for the ID and num=i+1
 				V,I,IM=self.M.getSTS(ID,i+1,params=True)
@@ -284,21 +296,21 @@ class STSviewer(QMainWindow):
 						IDown=I[-1:NPTS-1:-1] # Flip second part of the data
 					if len(IDown)<NPTS: # Missing data
 						IDown=np.pad(IDown,NPTS,'constant',constant_values=np.nan)
-					Im[0]=np.vstack((Im[0],IUp))   # Im[0] contains the Up scans
-					Im[1]=np.vstack((Im[1],IDown)) # Im[1] contains the Down scans
-					if not stat:
+					if ShowUp: Im[0]=np.vstack((Im[0],IUp))   # Im[0] contains the Up scans
+					if ShowDown: Im[1]=np.vstack((Im[1],IDown)) # Im[1] contains the Down scans
+					if not stat and ShowUp:
 						self.ax1.plot(sV,IUp*1e-6,
 							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
 							label="I%i (->)"%(i))
-					if not stat:
+					if not stat and ShowDown:
 						self.ax1.plot(sV,IDown*1e-6,'--',
 							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
 							label="I%i (<-)"%(i))
-				else:
+				else: # Start with upward scan without backward info
 					if V[0]==min(V):
-						Im[0]=np.vstack((Im[0],I))
+						if ShowUp: Im[0]=np.vstack((Im[0],I))
 					else:
-						Im[1]=np.vstack((Im[1],I))
+						if ShowDown: Im[1]=np.vstack((Im[1],I))
 					if not stat: self.ax1.plot(V,I*1e-6,
 						color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
 						label="I%i"%(i))

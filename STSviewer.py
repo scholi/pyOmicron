@@ -258,8 +258,9 @@ class STSviewer(QMainWindow):
 		NumShown=[]
 
 		for i in range(self.STS[ID]): # Scan over all STS having the same ID
-			ShowUp=self.ui.tableWidget.item(i,0)==QtCore.Qt.Checked
-			ShowDown=self.ui.tableWidget.item(i,1)==QtCore.Qt.Checked
+			ShowUp=self.ui.tableWidget.item(i,0).checkState()==QtCore.Qt.Checked
+			ShowDown=self.ui.tableWidget.item(i,1).checkState()==QtCore.Qt.Checked
+			print(ID,i,ShowUp,ShowDown)
 			if ShowUp or ShowDown: # Is the curve selected by the user to be plotted?
 				if not i+1 in NumShown:	NumShown.append(i+1) # Store in a list which num will be displayed
 

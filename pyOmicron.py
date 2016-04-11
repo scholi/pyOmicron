@@ -45,7 +45,9 @@ class Matrix:
 	
 	def getUpDown(self, X,Y, NPTS):
 		"""
-		Split data in Up and Down measurement, pad them with NaN if necessary and return them in increasing orrder
+		Split data in Up and Down measurement, pad them with NaN if necessary and return them in increasing order.
+		The returned value are X,Yup, Ydown
+		If Up/Down data are missing an empty array will be returned
 		"""
 		if len(Y)<NPTS: # Missing data
 			Y=np.pad(Y,NPTS,'constant',constant_values=np.nan)
@@ -61,17 +63,20 @@ class Matrix:
 
 	def getSTSData(self, ID,nums=[1]):
 		if not ID in self.IDs or len(nums)<1: return None
+		# retrieve the spectroscopy data (V, I and an object IM containing the parameters)
 		V,I,IM=self.getSTS(ID,nums[0],params=True)
 		NPTS=int(IM['Spectroscopy']['Device_1_Points']['value'])
 		hasDI=self.IDs[ID]['hasDI']
+		# Call the function to split and flip data if it's UP/Down measurements
 		V,I=self.getUpDown(V,I,NPTS)
-		for num in nums[1:]:
+		for num in nums[1:]: # Skip first num as it's already parsed above
 			X,Y=self.getUpDown(*self.getSTS(ID,num),NPTS=NPTS)
 			if not np.array_equal(V,X): raise Exception("Bias axis differs between measurements?!?")
-			for i in range(2): I[i]=np.vstack((I[i],Y[i]))
-		Im=[np.nan]*2
-		Ims=[np.nan]*2
-		for i in range(2):
+			for i in range(2): # i=0: Up scan, i=1: Down scan
+				I[i]=np.vstack((I[i],Y[i]))
+		Im=[np.nan]*2   # Store the mean of I
+		Ims=[np.nan]*2  # Store StDev of I
+		for i in range(2): # i=0: Up scan, i=1: Down scan
 			Im[i]=I[i].mean(axis=0)
 			Ims[i]=I[i].std(axis=0)
 		if hasDI:
@@ -79,15 +84,19 @@ class Matrix:
 			for num in nums[1:]:
 				X,Y=self.getUpDown(*self.getDIDV(ID,num),NPTS=NPTS)
 				if not np.array_equal(V,X): raise Exception("Bias axis differs between measurements?!?")
-				for i in range(2): dI[i]=np.vstack((dI[i],Y[i]))
-			dIm=[np.nan]*2
-			dIms=[np.nan]*2
-			for i in range(2):
+				for i in range(2): # i=0: Up scan, i=1: Down scan
+					dI[i]=np.vstack((dI[i],Y[i]))
+			dIm=[np.nan]*2   # Store the mean of dI/dV
+			dIms=[np.nan]*2  # Store the StdDev of dI/dV
+			for i in range(2): # i=0: Up scan, i=1: Down scan
 				dIm[i]=dI[i].mean(axis=0)
 				dIms[i]=dI[i].std(axis=0)
 			return {'nums':nums,'V':V,'I':I,'dI':dI,'Imean':Im,'Istd':Ims,'dImean':dIm,'dIstd':dIms}
 
 	def getDIDV(self, ID, num=1):
+		"""
+		The dI/dV measurements are stored the same way as the I(V), but with file extension Aux2(V).
+		"""
 		return self.getSTS(ID,num,ext='Aux2')
 
 	def getSTSparams(self, ID, num=1, ext='I'):

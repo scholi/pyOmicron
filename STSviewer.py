@@ -13,6 +13,13 @@ from STS import STS
 
 FontSize=8
 
+"""
+	Developer: Olivier Scholder
+	GIT repo: https://github.com/scholi/pyOmicron
+	
+	This App display a graphical window with various plot to analyse the I(V), dI/dI and (dI/dV)/(I/V) from Omicron STS files
+"""
+
 class STSviewer(QMainWindow):
 	def plot_err1(self, ax,X,Y,DY,col):
 		"""
@@ -27,8 +34,23 @@ class STSviewer(QMainWindow):
 		ax.fill_between(X,Y-DY,Y+DY,facecolor=col,alpha=0.3)
 		ax.fill_between(X,Y-2*DY,Y+2*DY,facecolor=col,alpha=0.2)
 
-	def on_pick(self):
+	def on_pick(self): # Do nothing important
 		pass
+	
+	def initPlotLayout(self):
+		"""
+		Setup the plotting layout.
+		"""
+		gs=gridspec.GridSpec(2, 2)
+		sp1=gs.new_subplotspec((0,0))
+		sp2=gs.new_subplotspec((1,0))
+		sp3=gs.new_subplotspec((0,1),2)
+		self.ax1 = self.fig.add_subplot(sp1)
+		self.ax2  = self.fig.add_subplot(sp2)
+		self.ax3  = self.fig.add_subplot(sp3)
+		self.ax1b = self.ax1.twinx()
+		self.ax3b = self.ax3.twinx()
+		self.fig.tight_layout()
 
 	def __init__(self):
 		"""
@@ -47,25 +69,19 @@ class STSviewer(QMainWindow):
 		self.save=False 
 
 		# Setup the plotting layout
-		gs=gridspec.GridSpec(2, 2)
-		sp1=gs.new_subplotspec((0,0))
-		sp2=gs.new_subplotspec((1,0))
-		sp3=gs.new_subplotspec((0,1),2)
-		self.ax1 = self.fig.add_subplot(sp1)
-		self.ax2  = self.fig.add_subplot(sp2)
-		self.ax3  = self.fig.add_subplot(sp3)
-		self.ax1b = self.ax1.twinx()
-		self.ax3b = self.ax3.twinx()
-		self.fig.tight_layout()
+		self.initPlotLayout()
 
 		# Ask for the directory containing the matrix files
 		if len(sys.argv)<2:
 			self.path=QFileDialog.getExistingDirectory()
 		else:
+			# If an argument is sent to the script, the first argument will be used as a Path. Very usefull for debugging the script without having to selectr the folder each time with window dialog
 			self.path=sys.argv[1]
+		
+		# Read the Matrix file
 		self.M=pyO.Matrix(self.path)
 
-		# Loocking for a Table of Content file (called toc.txt or ToX.txt)
+		# Looking for a Table of Content file (called toc.txt or ToC.txt)
 		self.ToC=None
 		f=False
 		if os.path.exists(self.path+"/toc.txt"):
@@ -222,13 +238,18 @@ class STSviewer(QMainWindow):
 		paramsShowed=False
 		stat=False
 		norm=False
-		if self.ui.statCB.isChecked(): stat=True
+		
+		# If checkbox "statistics" is checked, then variable stat=True
+		if self.ui.statCB.isChecked(): stat=True 
 		if self.ui.normCB.isChecked(): norm=True
 		counter=0
 		NumShown=[]
+
 		for i in range(self.STS[ID]): # Scan over all STS having the same ID
 			if self.ui.listWidget.item(i).checkState()==QtCore.Qt.Checked: # Is the curve selected by the user to be plotted?
-				NumShown.append(i+1)
+				NumShown.append(i+1) # Store in a list which num will be displayed
+
+				# Retrieve the STS data for the ID and num=i+1
 				V,I,IM=self.M.getSTS(ID,i+1,params=True)
 				NPTS=int(IM['Spectroscopy']['Device_1_Points']['value']) # Number of points in the V range
 				DV=self.ui.DV.value()
@@ -239,25 +260,30 @@ class STSviewer(QMainWindow):
 					p=self.M.getSTSparams(ID,i+1)
 					self.updateModel(p)
 					N=(0,NPTS)
-					Im=[np.empty(N),np.empty(N)]
-					dIm=[np.empty(N),np.empty(N)]
-					IVm=[np.empty((0,NPTS+2*skip)),np.empty((0,NPTS+2*skip))]
-					BIVm=[np.empty(N),np.empty(N)]
-					dIdVIVm=[np.empty(N),np.empty(N)]
+
+					# The follwing variables store matrices of the various signals as a list. The first element of the list is for the Up scans and the second for Down scans
+					Im=[np.empty(N),np.empty(N)] # Current: I
+					dIm=[np.empty(N),np.empty(N)] # dI/dV
+					IVm=[np.empty((0,NPTS+2*skip)),np.empty((0,NPTS+2*skip))] # I/V
+					BIVm=[np.empty(N),np.empty(N)] # Broadened I/V (BIV)
+					dIdVIVm=[np.empty(N),np.empty(N)] # (dI/dV)/BIV
+
+				# reconstruct the voltage array
 				sV=np.linspace(min(V),max(V),NPTS) # Voltage values in increading order
+
 				if len(I)<NPTS: # Missing data
 					I=np.pad(I,NPTS,'constant',constant_values=np.nan)
 				elif len(I)>NPTS: # Forward & Backward scan
 					if V[1]<V[0]: # Start with Downward scan
 						IUp=I[NPTS:]
-						IDown=I[NPTS-1::-1]
+						IDown=I[NPTS-1::-1] # flip first part of the data
 					else:
 						IUp=I[:NPTS]
-						IDown=I[-1:NPTS-1:-1]
+						IDown=I[-1:NPTS-1:-1] # Flip second part of the data
 					if len(IDown)<NPTS: # Missing data
 						IDown=np.pad(IDown,NPTS,'constant',constant_values=np.nan)
-					Im[0]=np.vstack((Im[0],IUp))
-					Im[1]=np.vstack((Im[1],IDown))
+					Im[0]=np.vstack((Im[0],IUp))   # Im[0] contains the Up scans
+					Im[1]=np.vstack((Im[1],IDown)) # Im[1] contains the Down scans
 					if not stat:
 						self.ax1.plot(sV,IUp*1e-6,
 							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),

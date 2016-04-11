@@ -98,9 +98,6 @@ class STSviewer(QMainWindow):
 		# Add the found data to the combo box
 		self.populateUI()
 
-		if len(sys.argv)>2:
-			ID=sys.argv[2]
-			self.ui.comboBox.setCurrentIndex(self.ui.comboBox.findText(ID))
 
 		# QT: SIGNALS -> SLOTS
 		# This set which function is called when buttons, checkboxes, etc. are clicked
@@ -114,6 +111,11 @@ class STSviewer(QMainWindow):
 		self.InfoShowHideToggle('Hide')
 		
 		self.updateSTSid()
+		
+		if len(sys.argv)>2:
+			ID=sys.argv[2]
+			self.ui.comboBox.setCurrentIndex(self.ui.comboBox.findText(ID,QtCore.Qt.MatchStartsWith))
+
 		self.plotUpdate()
 
 	def InfoShowHideToggle(self,action='Toggle'):
@@ -350,15 +352,17 @@ class STSviewer(QMainWindow):
 						if not stat: self.ax2.plot(sV,dIs[ud]/BIV,['-','--'][ud],
 							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
 							label="(%s)"%(['->','<-'][ud]))
-					# end for ud
+					# end for ud (up/down)
 				# end if STS is shown
 			# end for i in IDs
-#			self.ax3.legend(prop={'size':6}) quite slow. comment it for now
-#			self.ax1.legend(loc=2,prop={'size':6})
-#		o	self.ax1b.legend(loc=1,prop={'size':6})
+##			self.ax3.legend(prop={'size':6}) quite slow. comment it for now
+##			self.ax1.legend(loc=2,prop={'size':6})
+##		 	self.ax1b.legend(loc=1,prop={'size':6})
+
 		if self.save:
-			X=np.vstack((V,Im[0],dIm[0],Im[1],dIm[1],dIdVIVm[0],dIdVIVm[1]))
-			header="V\t"
+			# Saving the data
+			X=np.vstack((sV,Im[0],dIm[0],Im[1],dIm[1],dIdVIVm[0],dIdVIVm[1]))
+			header="DV=%.3fV\nV\t"%(DV)
 			header+="\t".join(["I{}_Up(V)".format(i) for i in NumShown])
 			header+="\t"+"\t".join(["dI{}/dV_Up".format(i) for i in NumShown])
 			header+="\t"+"\t".join(["I{}_Down(V)".format(i) for i in NumShown])

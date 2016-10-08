@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import struct
 import os, sys
 import re
+import copy
 
 class Matrix:
 	"""
@@ -186,7 +187,7 @@ class Matrix:
 			self.fp.read(12)
 			a=self.read_string() # Filename
 			r['filename']=a
-			self.images[a]=self.params # Store the parameters used to record the file a			se
+			self.images[a]=copy.deepcopy(self.params) # Store the parameters used to record the file a			se
 
 			# Create a catalogue to avoid to scan all images later
 			res=re.search(r'^(.*?)--([0-9]*)_([0-9]*)\.([^_]+)_mtrx$',a)

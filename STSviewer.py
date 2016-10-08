@@ -52,7 +52,7 @@ class STSviewer(QMainWindow):
 		self.ax3b = self.ax3.twinx()
 		self.fig.tight_layout()
 
-	def __init__(self):
+	def __init__(self,DIext='Aux2'):
 		"""
 		Initialize the graphical user interface
 		"""
@@ -67,6 +67,8 @@ class STSviewer(QMainWindow):
 		self.canvas.mpl_connect('pick_event', self.on_pick)
 		
 		self.save=False 
+
+		self.DIext=DIext
 
 		# Setup the plotting layout
 		self.initPlotLayout()
@@ -141,7 +143,7 @@ class STSviewer(QMainWindow):
 				j=int(r.group(1))
 				if j in self.STS: self.STS[j]+=1
 				else: self.STS[j]=1
-				if i[:-9]+'Aux2(V)_mtrx' in self.M.images: self.hasDIDV.append(j)
+				if i[:-9]+self.DIext+'(V)_mtrx' in self.M.images: self.hasDIDV.append(j)
 		for i in self.STS:
 			if self.ToC!=None and i in self.ToC:
 				self.ui.comboBox.addItem(str(i)+" (%s)"%(self.ToC[i]))
@@ -304,7 +306,7 @@ class STSviewer(QMainWindow):
 						label="I%i"%(i))
 					
 				if ID in self.hasDIDV:
-					V2,dI=self.M.getDIDV(ID,i+1)
+					V2,dI=self.M.getSTS(ID,i+1,self.DIext)
 					if norm: dI-=dI.min()
 					if len(I)>NPTS: # Forward & Backward scan
 						if V[1]<V[0]: # Start with Downward scan
@@ -402,6 +404,6 @@ class STSviewer(QMainWindow):
 		# end plotUpdate
 
 app = QApplication(sys.argv)
-S=STSviewer()
+S=STSviewer(DIext='Aux1')
 S.show()
 sys.exit(app.exec_())

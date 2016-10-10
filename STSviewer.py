@@ -392,9 +392,12 @@ class STSviewer(QMainWindow):
 				BIVmm=BIVm[ud].mean(axis=0)
 				BIVms=BIVm[ud].std(axis=0)
 				self.plot_err1(self.ax1,sV,Imm,Ims,col1)
-				self.plot_err1(self.ax1b,sV,dImm,dIms,col2)
-				self.plot_err1(self.ax2,sV,dIVm,dIVs,col1)
-				self.plot_err1(self.ax3,nV,IVmm,IVms,col1)
+				try:
+					self.plot_err1(self.ax1b,sV,dImm,dIms,col2)
+					self.plot_err1(self.ax2,sV,dIVm,dIVs,col1)
+					self.plot_err1(self.ax3,nV,IVmm,IVms,col1)
+				except:
+					pass # No DI signal
 				self.ax3.plot(sV,BIVmm,color=col2)
 				self.ax3.fill_between(sV,BIVmm-BIVms,BIVmm+BIVms,facecolor=col2,alpha=0.3)
 				self.ax3.fill_between(sV,BIVmm-2*BIVms,BIVmm+2*BIVms,facecolor=col2,alpha=0.2)

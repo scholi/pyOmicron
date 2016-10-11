@@ -420,6 +420,6 @@ class STSviewer(QMainWindow):
 		# end plotUpdate
 
 app = QApplication(sys.argv)
-S=STSviewer(DIext='Aux1')
+S=STSviewer(DIext='Aux2')
 S.show()
 sys.exit(app.exec_())

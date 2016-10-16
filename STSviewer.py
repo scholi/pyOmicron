@@ -41,16 +41,28 @@ class STSviewer(QMainWindow):
 		"""
 		Setup the plotting layout.
 		"""
-		gs=gridspec.GridSpec(2, 2)
-		sp1=gs.new_subplotspec((0,0))
-		sp2=gs.new_subplotspec((1,0))
-		sp3=gs.new_subplotspec((0,1),2)
-		self.ax1 = self.fig.add_subplot(sp1)
-		self.ax2  = self.fig.add_subplot(sp2)
-		self.ax3  = self.fig.add_subplot(sp3)
+		try:
+			self.fig.clf()
+			self.fig.close()
+			del self.fig
+		except:
+			pass
+		if self.ui.DVplot.isChecked():
+			gs  = gridspec.GridSpec(2, 2)
+			sp3 = gs.new_subplotspec((0,1),2)
+		else:
+			gs  = gridspec.GridSpec(2, 1)
+		sp1 = gs.new_subplotspec((0,0))
+		sp2 = gs.new_subplotspec((1,0))
+		if self.ui.DVplot.isChecked():
+			self.ax3  = self.fig.add_subplot(sp3)
+			self.ax3b = self.ax3.twinx()
+		self.ax1  = self.fig.add_subplot(sp1)
 		self.ax1b = self.ax1.twinx()
-		self.ax3b = self.ax3.twinx()
+		self.ax2  = self.fig.add_subplot(sp2)
 		self.fig.tight_layout()
+		if self.ui.comboBox.currentText().split(' ')[0]!='':
+			self.plotUpdate()
 
 	def __init__(self,DIext='Aux2'):
 		"""
@@ -110,6 +122,7 @@ class STSviewer(QMainWindow):
 		self.ui.normCB.stateChanged.connect(self.plotUpdate)
 		self.ui.pushButton.clicked.connect(self.InfoShowHideToggle)
 		self.ui.saveBT.clicked.connect(self.export)
+		self.ui.DVplot.stateChanged.connect(self.initPlotLayout)
 		self.InfoShowHideToggle('Hide')
 		
 		self.updateSTSid()
@@ -232,8 +245,13 @@ class STSviewer(QMainWindow):
 		self.ax1.clear()
 		self.ax1b.clear()
 		self.ax2.clear()
-		self.ax3.clear()
-		self.ax3b.clear()
+		if self.ui.DVplot.isChecked():
+			self.ax3.clear()
+			self.ax3b.clear()
+			self.ax3.set_xlabel("Bias [V]",fontsize=FontSize)
+			self.ax3.set_ylabel("I/V [$\mu$A/V]",fontsize=FontSize)
+			self.ax3b.yaxis.label.set_color("green")
+			self.ax3b.tick_params(axis='y',colors="green")
 
 		# Setting labels and axis
 		self.ax1.hold(True)
@@ -242,20 +260,18 @@ class STSviewer(QMainWindow):
 		self.ax1.set_ylabel("Current [pA]",fontsize=FontSize)
 		self.ax1b.set_ylabel("dI/dV [pA/V]",fontsize=FontSize)
 		self.ax2.set_ylabel(r'$\frac{dI/dV}{\overline{I/V}}$',fontsize=FontSize)
-		self.ax3.set_xlabel("Bias [V]",fontsize=FontSize)
-		self.ax3.set_ylabel("I/V [$\mu$A/V]",fontsize=FontSize)
-		self.ax3b.yaxis.label.set_color("green")
-		self.ax3b.tick_params(axis='y',colors="green")
 
 		# plot the selected curves
 		ID=int(self.ui.comboBox.currentText().split(' ')[0])
 		paramsShowed=False
-		stat=False
-		norm=False
+		stat	 = False
+		norm   = False
+		DVplot = False
 		
 		# If checkbox "statistics" is checked, then variable stat=True
-		if self.ui.statCB.isChecked(): stat=True 
-		if self.ui.normCB.isChecked(): norm=True
+		if self.ui.statCB.isChecked(): stat   = True 
+		if self.ui.normCB.isChecked(): norm   = True
+		if self.ui.DVplot.isChecked(): DVplot = True
 		counter=0
 		NumShown=[]
 
@@ -359,11 +375,11 @@ class STSviewer(QMainWindow):
 						IVm[ud]=np.vstack((IVm[ud],IV))
 						BIVm[ud]=np.vstack((BIVm[ud],BIV))
 						dIdVIVm[ud]=np.vstack((dIdVIVm[ud],dIs[ud]/BIV))
-						if not stat: self.ax3.plot(nV,1e-12*IV,['b','--b'][ud],
+						if not stat and DVplot: self.ax3.plot(nV,1e-12*IV,['b','--b'][ud],
 							label="I/V (%s)"%(["->","<-"][ud]))
-						if not stat: self.ax3.plot(sV,1e-12*BIV,['r','--r'][ud],
+						if not stat and DVplot: self.ax3.plot(sV,1e-12*BIV,['r','--r'][ud],
 							label="$\overline{I/V}$ (%s)"%(["->","<-"][ud]))
-						if ud==0: self.ax3b.plot(nV,W,'g',label="conv. func.")
+						if ud==0 and DVplot: self.ax3b.plot(nV,W,'g',label="conv. func.")
 						if not stat: self.ax2.plot(sV,dIs[ud]/BIV,['-','--'][ud],
 							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
 							label="(%s)"%(['->','<-'][ud]))
@@ -408,18 +424,22 @@ class STSviewer(QMainWindow):
 				try:
 					self.plot_err1(self.ax1b,sV,dImm,dIms,col2)
 					self.plot_err1(self.ax2,sV,dIVm,dIVs,col1)
-					self.plot_err1(self.ax3,nV,IVmm,IVms,col1)
+					if DVplot:
+						self.plot_err1(self.ax3,nV,IVmm,IVms,col1)
 				except:
 					pass # No DI signal
-				self.ax3.plot(sV,BIVmm,color=col2)
-				self.ax3.fill_between(sV,BIVmm-BIVms,BIVmm+BIVms,facecolor=col2,alpha=0.3)
-				self.ax3.fill_between(sV,BIVmm-2*BIVms,BIVmm+2*BIVms,facecolor=col2,alpha=0.2)
-		for x in [self.ax1,self.ax1b,self.ax2,self.ax3,self.ax3b]:
+				if DVplot:
+					self.ax3.plot(sV,BIVmm,color=col2)
+					self.ax3.fill_between(sV,BIVmm-BIVms,BIVmm+BIVms,facecolor=col2,alpha=0.3)
+					self.ax3.fill_between(sV,BIVmm-2*BIVms,BIVmm+2*BIVms,facecolor=col2,alpha=0.2)
+		Axes=[self.ax1,self.ax1b,self.ax2]
+		if DVplot: Axes+=[self.ax3,self.ax3b]
+		for x in Axes:
 			x.tick_params(axis='both', labelsize=FontSize)
 		self.canvas.draw()
 		# end plotUpdate
 
 app = QApplication(sys.argv)
-S=STSviewer(DIext='Aux2')
+S=STSviewer(DIext='Aux1')
 S.show()
 sys.exit(app.exec_())

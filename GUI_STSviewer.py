@@ -2,7 +2,8 @@
 
 # Form implementation generated from reading ui file 'GUI_STSviewer.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created: Sun Oct 16 21:51:05 2016
+#      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -39,6 +40,9 @@ class Ui_MainWindow(object):
         self.normCB = QtGui.QCheckBox(self.centralwidget)
         self.normCB.setObjectName(_fromUtf8("normCB"))
         self.verticalLayout.addWidget(self.normCB)
+        self.DVplot = QtGui.QCheckBox(self.centralwidget)
+        self.DVplot.setObjectName(_fromUtf8("DVplot"))
+        self.verticalLayout.addWidget(self.DVplot)
         self.saveBT = QtGui.QPushButton(self.centralwidget)
         self.saveBT.setObjectName(_fromUtf8("saveBT"))
         self.verticalLayout.addWidget(self.saveBT)
@@ -119,7 +123,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.pushButton)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1385, 19))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1385, 21))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtGui.QStatusBar(MainWindow)
@@ -133,6 +137,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "STSviewer", None))
         self.statCB.setText(_translate("MainWindow", "Statistics", None))
         self.normCB.setText(_translate("MainWindow", "Shift dI (set min(dI)=0)", None))
+        self.DVplot.setText(_translate("MainWindow", "Show I/V plot", None))
         self.saveBT.setText(_translate("MainWindow", "Save Data", None))
         self.label.setText(_translate("MainWindow", "Bandbroadening (ΔV):", None))
         self.pushButton.setText(_translate("MainWindow", "<<", None))

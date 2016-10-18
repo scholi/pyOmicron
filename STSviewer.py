@@ -175,7 +175,7 @@ class STSviewer(QMainWindow):
 				if j in self.STS: self.STS[j]+=1
 				else: self.STS[j]=1
 				if i[:-9]+self.DIext+'(V)_mtrx' in self.M.images: self.hasDIDV.append(j)
-		for i in self.STS:
+		for i in sorted(self.STS):
 			if self.ToC!=None and i in self.ToC:
 				self.ui.comboBox.addItem(str(i)+" (%s)"%(self.ToC[i]))
 			else:
@@ -379,17 +379,19 @@ class STSviewer(QMainWindow):
 						else:
 							dIUp=dI[:NPTS]
 							dIDown=dI[-1:NPTS-1:-1]
-						dIm[0]=np.vstack((dIm[0],dIUp))
-						dIm[1]=np.vstack((dIm[1],dIDown))
+						if stat:
+							dIm[0]=np.vstack((dIm[0],dIUp))
+							dIm[1]=np.vstack((dIm[1],dIDown))
 						Is=[IUp,IDown]
 						dIs=[dIUp,dIDown]
 					else:
 						Is=[I]
 						dIs=[dI]
-						if V[0]==min(V):
-							dIm[0]=np.vstack((dIm[0],dI))
-						else:
-							dIm[1]=np.vstack((dIm[1],dI))
+						if stat:
+							if V[0]==min(V):
+								dIm[0]=np.vstack((dIm[0],dI))
+							else:
+								dIm[1]=np.vstack((dIm[1],dI))
 
 					for ud in range(len(Is)):
 						if ud==0 and not (self.ui.showUp.isChecked() and ShowUp): continue
@@ -409,9 +411,10 @@ class STSviewer(QMainWindow):
 						BIV=S.getBIV()
 						W=S.getW()
 						nV=S.getnV()
-						IVm[ud]=np.vstack((IVm[ud],IV))
-						BIVm[ud]=np.vstack((BIVm[ud],BIV))
-						dIdVIVm[ud]=np.vstack((dIdVIVm[ud],dIs[ud]/BIV))
+						if stat:
+							IVm[ud]=np.vstack((IVm[ud],IV))
+							BIVm[ud]=np.vstack((BIVm[ud],BIV))
+							dIdVIVm[ud]=np.vstack((dIdVIVm[ud],dIs[ud]/BIV))
 						if not stat and DVplot: self.ax3.plot(nV,1e-12*IV,['b','--b'][ud],
 							label="I/V (%s)"%(["->","<-"][ud]))
 						if not stat and DVplot: self.ax3.plot(sV,1e-12*BIV,['r','--r'][ud],

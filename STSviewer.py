@@ -148,8 +148,12 @@ class STSviewer(QMainWindow):
 		for i in range(self.STS[ID]): # Scan over all STS having the same ID
 			ShowUp=self.ui.tableWidget.item(i,0).checkState()==QtCore.Qt.Checked
 			ShowDown=self.ui.tableWidget.item(i,1).checkState()==QtCore.Qt.Checked
-			if ShowUp: self.DisplayList.append([ID,i,'UP'])
-			if ShowDown: self.DisplayList.append([ID,i,'DOWN'])
+			su=0
+			sd=0
+			if ShowUp: su=1
+			if ShowDown:sd=1
+			if sd==1 or su==1:
+				self.DisplayList.append([ID,i,su,sd])
 
 	def InfoShowHideToggle(self,action='Toggle'):
 		"""
@@ -306,12 +310,8 @@ class STSviewer(QMainWindow):
 				col=i
 			else:
 				ID=x[0]
-				if x[2]=='UP':
-					ShowUp=True
-					ShowDown=False
-				else:
-					ShowUp=False
-					ShowDown=True
+				ShowUp=(x[2]==1)
+				ShowDown=(x[3]==1)
 				i=x[1]
 				col+=1
 			if ShowUp or ShowDown: # Is the curve selected by the user to be plotted?

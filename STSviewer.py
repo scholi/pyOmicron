@@ -133,7 +133,7 @@ class STSviewer(QMainWindow):
 		self.InfoShowHideToggle('Hide')
 		self.ui.SglView.toggled.connect(self.plotUpdate)
 		self.ui.lstView.toggled.connect(self.plotUpdate)
-		
+		self.ui.displayList.keyPressEvent = self.RemoveFromList
 		self.updateSTSid()
 		
 		if len(sys.argv)>2:
@@ -154,6 +154,14 @@ class STSviewer(QMainWindow):
 			if ShowDown:sd=1
 			if sd==1 or su==1:
 				self.DisplayList.append([ID,i,su,sd])
+
+	def RemoveFromList(self, event):
+		if event.key() == QtCore.Qt.Key_Delete:
+			for sel in self.ui.displayList.selectedItems():
+				index = self.ui.displayList.row(sel)
+				del self.DisplayList[index]
+				self.ui.displayList.takeItem(index)
+			self.plotUpdate()
 
 	def InfoShowHideToggle(self,action='Toggle'):
 		"""

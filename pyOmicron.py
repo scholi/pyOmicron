@@ -9,7 +9,7 @@ class Matrix:
 	"""
 	Class to Read and Hangle Matrix files
 	"""
-	def __init__(self,Path): # Give the Path of the folder containing all the mtrx files
+	def __init__(self,Path,pbCallback=None,fast=False): # Give the Path of the folder containing all the mtrx files
 		# Read PATH and open file
 		self.Path=Path
 		self.fp=None # file variable
@@ -28,8 +28,14 @@ class Matrix:
 		self.images={} # images[x] are the parameters used during the record for file named x
 
 		# Parse the file and read the block
+		cur = self.fp.tell()
+		self.fp.seek(0,2)
+		FileSize = self.fp.tell()
+		self.fp.seek(cur)
 		while True: # While not EOF scan files and read block
-			r=self.read_block()
+			r=self.read_block(fast=fast)
+			if pbCallback is not None:
+				pbCallback(100*self.fp.tell()/FileSize)
 			if r==False: break
 
 	def read_string(self):
@@ -162,7 +168,7 @@ class Matrix:
 	def getUI(self): # Read an unsigned int from the file
 		return struct.unpack("<L",self.fp.read(4))[0]
 
-	def read_block(self,sub=False):
+	def read_block(self,sub=False,fast=False):
 		indent=self.fp.read(4) # 4bytes forming the header. Those are capital letters between A-Z
 		if len(indent)<4: # EOF reached?
 			return False
@@ -187,7 +193,11 @@ class Matrix:
 			self.fp.read(12)
 			a=self.read_string() # Filename
 			r['filename']=a
-			self.images[a]=copy.deepcopy(self.params) # Store the parameters used to record the file a			se
+			if not fast:
+				self.images[a]=copy.deepcopy(self.params) # Store the parameters used to record the file
+			else:
+				self.images[a]={'Spectroscopy':copy.deepcopy(self.params['Spectroscopy'])} # Store the parameters used to record the file
+				
 
 			# Create a catalogue to avoid to scan all images later
 			res=re.search(r'^(.*?)--([0-9]*)_([0-9]*)\.([^_]+)_mtrx$',a)

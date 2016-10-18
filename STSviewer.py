@@ -69,9 +69,11 @@ class STSviewer(QMainWindow):
 		Initialize the graphical user interface
 		"""
 		QMainWindow.__init__(self)
+		self.setWindowTitle("sljus@Lund STS viewer")
 		# Set up the user interface from Designer.
 		self.ui = Ui_MainWindow()
 		self.ui.setupUi(self)
+		self.DisplayList=[]
 
 		# Setup the ploting widgets
 		self.canvas=self.ui.mpl.canvas
@@ -91,10 +93,12 @@ class STSviewer(QMainWindow):
 		else:
 			# If an argument is sent to the script, the first argument will be used as a Path. Very usefull for debugging the script without having to selectr the folder each time with window dialog
 			self.path=sys.argv[1]
-		
+		p = QtGui.QProgressDialog("Loading data...","Abort!",0,100)
+		p.setWindowTitle("sljus@Lund STS viewer")
 		# Read the Matrix file
-		self.M=pyO.Matrix(self.path)
-
+		self.M=pyO.Matrix(self.path,pbCallback=p.setValue,fast=True)
+		p.setValue(100)
+		p.close()
 		# Looking for a Table of Content file (called toc.txt or ToC.txt)
 		self.ToC=None
 		f=False
@@ -120,10 +124,15 @@ class STSviewer(QMainWindow):
 		self.ui.DV.valueChanged.connect(self.plotUpdate)
 		self.ui.statCB.stateChanged.connect(self.plotUpdate)
 		self.ui.normCB.stateChanged.connect(self.plotUpdate)
+		self.ui.showUp.stateChanged.connect(self.plotUpdate)
+		self.ui.showDown.stateChanged.connect(self.plotUpdate)
 		self.ui.pushButton.clicked.connect(self.InfoShowHideToggle)
 		self.ui.saveBT.clicked.connect(self.export)
 		self.ui.DVplot.stateChanged.connect(self.initPlotLayout)
+		self.ui.AddToList.clicked.connect(self.AddToList)
 		self.InfoShowHideToggle('Hide')
+		self.ui.SglView.toggled.connect(self.plotUpdate)
+		self.ui.lstView.toggled.connect(self.plotUpdate)
 		
 		self.updateSTSid()
 		
@@ -132,6 +141,15 @@ class STSviewer(QMainWindow):
 			self.ui.comboBox.setCurrentIndex(self.ui.comboBox.findText(ID,QtCore.Qt.MatchStartsWith))
 
 		self.plotUpdate()
+
+	def AddToList(self):
+		ID=int(self.ui.comboBox.currentText().split(' ')[0])
+		self.ui.displayList.addItem(str(ID))
+		for i in range(self.STS[ID]): # Scan over all STS having the same ID
+			ShowUp=self.ui.tableWidget.item(i,0).checkState()==QtCore.Qt.Checked
+			ShowDown=self.ui.tableWidget.item(i,1).checkState()==QtCore.Qt.Checked
+			if ShowUp: self.DisplayList.append([ID,i,'UP'])
+			if ShowDown: self.DisplayList.append([ID,i,'DOWN'])
 
 	def InfoShowHideToggle(self,action='Toggle'):
 		"""
@@ -263,6 +281,7 @@ class STSviewer(QMainWindow):
 
 		# plot the selected curves
 		ID=int(self.ui.comboBox.currentText().split(' ')[0])
+		
 		paramsShowed=False
 		stat	 = False
 		norm   = False
@@ -275,12 +294,28 @@ class STSviewer(QMainWindow):
 		counter=0
 		NumShown=[]
 
-		for i in range(self.STS[ID]): # Scan over all STS having the same ID
-			ShowUp=self.ui.tableWidget.item(i,0).checkState()==QtCore.Qt.Checked
-			ShowDown=self.ui.tableWidget.item(i,1).checkState()==QtCore.Qt.Checked
-			print(ID,i,ShowUp,ShowDown)
+		Nlist=range(self.STS[ID]) # Scan over all STS having the same ID
+		if self.ui.lstView.isChecked():
+			Nlist=self.DisplayList
+		col=-1
+		for x in Nlist: # Scan over all STS having the same ID
+			if self.ui.SglView.isChecked():
+				i=x
+				ShowUp=self.ui.tableWidget.item(i,0).checkState()==QtCore.Qt.Checked
+				ShowDown=self.ui.tableWidget.item(i,1).checkState()==QtCore.Qt.Checked
+				col=i
+			else:
+				ID=x[0]
+				if x[2]=='UP':
+					ShowUp=True
+					ShowDown=False
+				else:
+					ShowUp=False
+					ShowDown=True
+				i=x[1]
+				col+=1
 			if ShowUp or ShowDown: # Is the curve selected by the user to be plotted?
-				if not i+1 in NumShown:	NumShown.append(i+1) # Store in a list which num will be displayed
+				if self.ui.SglView.isChecked() and not i+1 in NumShown:	NumShown.append(i+1) # Store in a list which num will be displayed
 
 				# Retrieve the STS data for the ID and num=i+1
 				V,I,IM=self.M.getSTS(ID,i+1,params=True)
@@ -317,13 +352,13 @@ class STSviewer(QMainWindow):
 						IDown=np.pad(IDown,NPTS,'constant',constant_values=np.nan)
 					if ShowUp: Im[0]=np.vstack((Im[0],IUp))   # Im[0] contains the Up scans
 					if ShowDown: Im[1]=np.vstack((Im[1],IDown)) # Im[1] contains the Down scans
-					if not stat and ShowUp:
+					if not stat and ShowUp and self.ui.showUp.isChecked():
 						self.ax1.plot(sV,IUp*1e-6,
-							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
+							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[col%len(self.colors)]),
 							label="I%i (->)"%(i))
-					if not stat and ShowDown:
+					if not stat and ShowDown and self.ui.showDown.isChecked():
 						self.ax1.plot(sV,IDown*1e-6,'--',
-							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
+							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[col%len(self.colors)]),
 							label="I%i (<-)"%(i))
 				else: # Start with upward scan without backward info
 					if V[0]==min(V):
@@ -331,7 +366,7 @@ class STSviewer(QMainWindow):
 					else:
 						if ShowDown: Im[1]=np.vstack((Im[1],I))
 					if not stat: self.ax1.plot(V,I*1e-6,
-						color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
+						color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[col%len(self.colors)]),
 						label="I%i"%(i))
 					
 				if ID in self.hasDIDV:
@@ -357,9 +392,11 @@ class STSviewer(QMainWindow):
 							dIm[1]=np.vstack((dIm[1],dI))
 
 					for ud in range(len(Is)):
+						if ud==0 and not (self.ui.showUp.isChecked() and ShowUp): continue
+						if ud==1 and not (self.ui.showDown.isChecked() and ShowDown): continue
 						if len(dIs[ud])<NPTS: dIs[ud]=np.pad(dIs[ud],NPTS,'constant',constant_values=np.nan)
 						if not stat: self.ax1b.plot(sV,dIs[ud]*1e-6,[':','-.'][ud],
-							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
+							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[col%len(self.colors)]),
 							label="dI%i (%s)"%(i,['->','<-'][ud]))
 						delta=NPTS-len(Is[ud])
 						if delta>0:
@@ -381,7 +418,7 @@ class STSviewer(QMainWindow):
 							label="$\overline{I/V}$ (%s)"%(["->","<-"][ud]))
 						if ud==0 and DVplot: self.ax3b.plot(nV,W,'g',label="conv. func.")
 						if not stat: self.ax2.plot(sV,dIs[ud]/BIV,['-','--'][ud],
-							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[i%len(self.colors)]),
+							color="#{0:02x}{1:02x}{2:02x}".format(*self.colors[col%len(self.colors)]),
 							label="(%s)"%(['->','<-'][ud]))
 					# end for ud (up/down)
 				# end if STS is shown
@@ -403,6 +440,8 @@ class STSviewer(QMainWindow):
 			np.savetxt("STS_%i.dat"%(ID),X.transpose(),header=header)
 		if stat: # If statistic checkbox is enabled
 			for ud in range(2):
+				if ud==0 and not self.ui.showUp.isChecked(): continue
+				if ud==1 and not self.ui.showDown.isChecked(): continue
 				if Im[ud].shape[0]==0: continue
 				fmt=['-','--'][ud]
 				col1=['blue','purple'][ud]

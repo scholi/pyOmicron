@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'GUI_STSviewer.ui'
 #
-# Created: Sun Oct 16 21:51:05 2016
+# Created: Tue Oct 18 21:33:34 2016
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -67,6 +67,36 @@ class Ui_MainWindow(object):
         self.tableWidget.setColumnCount(0)
         self.tableWidget.setRowCount(0)
         self.verticalLayout.addWidget(self.tableWidget)
+        self.AddToList = QtGui.QPushButton(self.centralwidget)
+        self.AddToList.setObjectName(_fromUtf8("AddToList"))
+        self.verticalLayout.addWidget(self.AddToList)
+        self.gridLayout = QtGui.QGridLayout()
+        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        self.lstView = QtGui.QRadioButton(self.centralwidget)
+        self.lstView.setObjectName(_fromUtf8("lstView"))
+        self.gridLayout.addWidget(self.lstView, 0, 1, 1, 1)
+        self.SglView = QtGui.QRadioButton(self.centralwidget)
+        self.SglView.setEnabled(True)
+        self.SglView.setChecked(True)
+        self.SglView.setObjectName(_fromUtf8("SglView"))
+        self.gridLayout.addWidget(self.SglView, 0, 0, 1, 1)
+        self.showUp = QtGui.QCheckBox(self.centralwidget)
+        self.showUp.setChecked(True)
+        self.showUp.setObjectName(_fromUtf8("showUp"))
+        self.gridLayout.addWidget(self.showUp, 1, 0, 1, 1)
+        self.showDown = QtGui.QCheckBox(self.centralwidget)
+        self.showDown.setChecked(True)
+        self.showDown.setObjectName(_fromUtf8("showDown"))
+        self.gridLayout.addWidget(self.showDown, 1, 1, 1, 1)
+        self.verticalLayout.addLayout(self.gridLayout)
+        self.displayList = QtGui.QListWidget(self.centralwidget)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.displayList.sizePolicy().hasHeightForWidth())
+        self.displayList.setSizePolicy(sizePolicy)
+        self.displayList.setObjectName(_fromUtf8("displayList"))
+        self.verticalLayout.addWidget(self.displayList)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.label = QtGui.QLabel(self.centralwidget)
@@ -139,6 +169,11 @@ class Ui_MainWindow(object):
         self.normCB.setText(_translate("MainWindow", "Shift dI (set min(dI)=0)", None))
         self.DVplot.setText(_translate("MainWindow", "Show I/V plot", None))
         self.saveBT.setText(_translate("MainWindow", "Save Data", None))
+        self.AddToList.setText(_translate("MainWindow", "Add To View list", None))
+        self.lstView.setText(_translate("MainWindow", "List View", None))
+        self.SglView.setText(_translate("MainWindow", "Single View", None))
+        self.showUp.setText(_translate("MainWindow", "UP", None))
+        self.showDown.setText(_translate("MainWindow", "DOWN", None))
         self.label.setText(_translate("MainWindow", "Bandbroadening (ΔV):", None))
         self.pushButton.setText(_translate("MainWindow", "<<", None))
 

@@ -34,7 +34,9 @@ class Matrix:
                 break
 
     def read_string(self):
-        # Strings are stored as UTF-16. First 32-bits is the string length
+        """
+        Strings are stored as UTF-16. First 32-bits is the string length
+        """
         N = struct.unpack("<L", self.fp.read(4))[0] # string length
         if N == 0:
             return ""

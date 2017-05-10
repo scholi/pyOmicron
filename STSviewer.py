@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QListWidget, QListWidgetItem, QTreeWidgetItem
 from PyQt5 import QtGui, QtCore
 from GUI_STSviewer import Ui_MainWindow
 import sys
@@ -165,9 +165,9 @@ class STSviewer(QMainWindow):
         self.ui.listWidget.clear()
         ID = int(self.ui.comboBox.currentText().split(' ')[0])
         for i in range(self.STS[ID]):
-            item = QtGui.QListWidgetItem()
+            item = QListWidgetItem()
             item.setText(str(i+1)+" -----")
-            item.setTextColor(QtGui.QColor(*self.colors[i%len(self.colors)]))
+            item.setForeground(QtGui.QColor(*self.colors[i%len(self.colors)]))
             item.setFlags(item.flags()|QtCore.Qt.ItemIsUserCheckable)
             self.ui.listWidget.addItem( item )
             item.setCheckState(QtCore.Qt.Checked)
@@ -183,7 +183,7 @@ class STSviewer(QMainWindow):
             item = self.ui.treeWidget.invisibleRootItem()
         if type(value) is dict:
             if 'value' in value and 'unit' in value:
-                child = QtGui.QTreeWidgetItem() 
+                child = QTreeWidgetItem() 
                 if value['unit'] == '--':
                     child.setText(0,str(value['value']))
                 else:
@@ -191,13 +191,13 @@ class STSviewer(QMainWindow):
                 item.addChild(child)
             else:
                 for key, val in sorted(value.items()):
-                    child = QtGui.QTreeWidgetItem()
+                    child = QTreeWidgetItem()
                     child.setText(0, key)
                     item.addChild(child)
                     self.updateModel(val, child)
         elif type(value) is list:
             for val in value:
-                child = QtGui.QTreeWidgetItem()
+                child = QTreeWidgetItem()
                 item.addChild(child)
                 if type(val) is dict:
                     child.setText(0, '[dict]')
@@ -209,7 +209,7 @@ class STSviewer(QMainWindow):
                     child.setText(0, str(val))
                 child.setExpanded(True)
         else:
-            child = QtGui.QTreeWidgetItem()
+            child = QTreeWidgetItem()
             child.setText(0, str(value))
             item.addChild(child)
             
@@ -418,6 +418,6 @@ class STSviewer(QMainWindow):
         # end plotUpdate
 
 app = QApplication(sys.argv)
-S = STSviewer(DIext='Aux2')
+S = STSviewer(DIext='Aux1')
 S.show()
 sys.exit(app.exec_())

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-from PyQt4.QtGui import QMainWindow, QApplication, QFileDialog
-from PyQt4 import QtGui, QtCore
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
+from PyQt5 import QtGui, QtCore
 from GUI_STSviewer import Ui_MainWindow
 import sys
 import pyOmicron as pyO

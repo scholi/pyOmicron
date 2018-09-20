@@ -7,3 +7,5 @@ http://gwyddion.sourcearchive.com/documentation/2.16/omicronmatrix_8c-source.htm
 
 The main goal in to be able to read and plot spectroscopy files and mainly I(V)_mtrx files.
 Images can be read perfectly with Gwyddion and they will be implemented only in a future release.
+
+Short usage informations are available in the [wiki](https://github.com/scholi/pyOmicron/wiki)
